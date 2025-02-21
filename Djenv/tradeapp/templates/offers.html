@@ -1,0 +1,10 @@
+{% extends "base.html" %} {% block content %}
+<h1>Offer list</h1>
+<u1>
+	{% for offer in offers %}
+	<li>
+		{{ offer.title }}: {{ offer.description }}, {{ offer.posted_date }}
+	</li>
+	{% endfor %}
+</u1>
+{% endblock %}
