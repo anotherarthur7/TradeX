@@ -1,17 +1,31 @@
 {% extends "base.html" %} {% block content %}
+{% load static %}
+
 <section>
-	<img
-		src="{{ offer.image }}"
-		alt="{{ offer.title }}"
-	/>
+    <img
+        src="{{ offer.image }}"
+        alt="{{ offer.title }}"
+    />
 </section>
-<h1>Offer list</h1>
-<u1>
 
-	<li>
-		{{ offer.title }}: {{ offer.description }}, {{ offer.posted_date }},
-		
-	</li>
+<h1></h1>
 
-</u1>
+<ul style="list-style-type: none; padding-left: 20px;">
+    <li style="margin-bottom: 50px;">
+        <h2 style="font-size: 1em; font-weight: bold;">TITLE: {{ offer.title }}</h2>
+    </li>
+
+    <li style="margin-bottom: 50px;">
+        <p style="margin-left: 10px; font-size: 0.75em;">DESCRIPTION: {{ offer.description }}</p>
+    </li>
+
+    <li style="margin-bottom: 50px;">
+        <p style="margin-left: 10px; font-size: 0.75em;">COST: is ${{ offer.price }}</p>
+    </li>
+
+    <li style="margin-bottom: 50px;">
+        <p style="margin-left: 10px; font-size: 0.75em;">DATE: {{ offer.posted_date }}</p>
+    </li>
+</ul>
+
 {% endblock %}

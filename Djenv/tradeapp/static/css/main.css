@@ -5,10 +5,11 @@
 }
 
 body {
+    font-family: Arial, sans-serif;
     min-height: 100vh;
     background-color: black;
     color: whitesmoke;
-    font-size: 3rem;
+    font-size: 1.5rem;
 }
 
 nav {
@@ -30,7 +31,7 @@ section {
 
 h1,
 h2 {
-    font-size: 2.5rem;
+    font-size: 1.2rem;
 }
 
 p {
@@ -46,10 +47,47 @@ a:hover {
     opacity: .85;
 }
 
+label {
+    font-size: 1em; 
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    padding-left: 20px; 
+}
+
 .banner {
     display: block;
     width: 100%;
     max-width: 800px;
+}
+
+.form-group label{
+    font-size: 0.75em;
+    margin-bottom: 25px;
+    padding-left: 20px;
+}
+
+.custom-form-control {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    padding-left: 20px; 
+}
+
+.custom-button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
 }
 
 .form-with-validation {
@@ -78,6 +116,16 @@ a:hover {
     width: 125px;
 }
 
+.form-container {
+    width: 80%;         /* Adjust width of the form container */
+    margin: 20px auto;  /* Center the form */
+    padding: 20px;
+    border: 1px solid #ddd; /* Light border */
+    border-radius: 5px; /* Rounded corners */
+    background-color: #f9f9f9; /* Light background color */
+    padding-left: 30px; /* Add padding to the entire form */
+}
+
 .helptext {
     font-size: 1rem;
     margin-left: 1rem;
@@ -96,6 +144,10 @@ a:hover {
     content: '🚨 ';
 }
 
+.form-error {
+    color: red;
+    margin-top: 5px;
+  }
 
 .logout {
     display: inline-block;
@@ -110,3 +162,23 @@ a:hover {
 .logout-button:hover {
     opacity: .85;
 }
+ul.offer-list {
+    font-size: 1.5em;
+    list-style-position: inside;
+    list-style-type: disc; /* Add this for bullet points */
+  }
+  
+  ul.offer-list li {
+    font-size: 2em; 
+    margin-bottom: 5px;
+  }
+
+  ul.offer-list p {
+    font-size: 2em; 
+    font-size: 1.3em; 
+  }
+  
+  ul.offer-list li p {
+    font-size: 2em; 
+    display: inline; /* keeps price on the same line */
+  }

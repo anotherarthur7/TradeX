@@ -1,6 +1,13 @@
 {% extends "base.html" %} {% block content %}
+
 <h1>Offer list:</h1>
-{% for offer in offers %}
-	<li><p><a href="offermain/{{ offer.id }}">{{ offer.title }}</a>: ${{ offer.price }}</p></li>
-{% endfor %}
+
+<ul class="offer-list">
+    {% for offer in offers %}
+        <li>
+            <p><a href="offermain/{{ offer.id }}">{{ offer.title }}</a>: ${{ offer.price }}</p>
+        </li>
+    {% endfor %}
+</ul>
+
 {% endblock %}
