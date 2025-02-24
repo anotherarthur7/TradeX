@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title} Create new offer {% endblock]}
+
+{% block content %}
+<h1>Your offer specifications:</h1>
+<form method="POST" action="{% url 'create' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{form.as_p}} 
+    <button type="submit", name="save">Create new</button>
+</form>
+{% endblock %}
