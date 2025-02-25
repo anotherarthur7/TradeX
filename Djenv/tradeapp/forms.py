@@ -1,6 +1,10 @@
 from django import forms
 from django.forms import ModelForm
 from .models import Offer
+from .models import models 
+from django.contrib.auth import login, authenticate
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import User
 
 class OfferForm(ModelForm):
     title = forms.CharField(
