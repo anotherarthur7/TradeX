@@ -14,7 +14,7 @@ def register(response):
         if form.is_valid():
             form.save()
             messages.success(response, 'Registration successful! Please log in.')
-            return redirect('login')  # Redirect to the login page after registration
+            return redirect('login')
     else:
         form = RegisterForm()
         
