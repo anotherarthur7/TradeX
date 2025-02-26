@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'tradeapp',
     'register',
-    'crispy_forms',
 ]
 
 MIDDLEWARE = [
@@ -128,8 +127,6 @@ STATICFILES_DIRS = [
 MEDIA_URL = 'media/'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-
-CRISPY_TEMPLATE_PACK="uni_form"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

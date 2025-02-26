@@ -163,22 +163,22 @@ label {
     opacity: .85;
 }
 ul.offer-list {
-    font-size: 1.5em;
+    font-size: 1em;
     list-style-position: inside;
     list-style-type: disc; /* Add this for bullet points */
   }
   
   ul.offer-list li {
-    font-size: 2em; 
+    font-size: 1em; 
     margin-bottom: 5px;
   }
 
   ul.offer-list p {
-    font-size: 2em; 
+    font-size: 1em; 
     font-size: 1.3em; 
   }
   
   ul.offer-list li p {
-    font-size: 2em; 
+    font-size: 1em; 
     display: inline; /* keeps price on the same line */
   }
