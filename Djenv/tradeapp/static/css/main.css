@@ -179,6 +179,15 @@ ul.offer-list {
     background-color: #f9f9f9; /* Light background color */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
+.form-group {
+    color: #000000;
+    padding: 10px;
+    font-size: 0.75em;
+    margin: 30px auto; /* Center the form */
+    border: 1px solid #ccc; /* Light border */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
 
 /* Form heading */
 .form-container h1 {

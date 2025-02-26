@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 import os
 from pathlib import Path
 
+# Ensure sessions are enabled
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'  # Default
+SESSION_COOKIE_NAME = 'sessionid'  # Default
+SESSION_COOKIE_AGE = 1209600  # 2 weeks (default)
+
 SETTINGS_PATH = os.path.dirname(os.path.dirname(__file__))
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,6 +32,8 @@ SECRET_KEY = 'django-insecure-s1$7o84ke*ivhx1%m^dm9ym(748wuyk@o4zrsw#e4a5+4p#(4w
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+LOGIN_URL = 'login'  # Use the name of your login URL pattern
 
 
 # Application definition

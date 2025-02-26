@@ -6,3 +6,6 @@ admin.site.register(Offer)
 
 # TradeGod
 # Bargain-bargainAllTheTIME!
+
+# another_arthurr
+# new_password
