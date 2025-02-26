@@ -14,9 +14,9 @@ body {
 
 nav {
     padding: 1rem;
-    background-color: #44B78B;
+    background-color: #44b78b;
     color: white;
-    font-size: 2.5rem;
+    font-size: 1.5rem;
 }
 
 main {
@@ -53,18 +53,13 @@ label {
     font-weight: bold;
     margin-bottom: 5px;
     padding-left: 20px; 
+
 }
 
 .banner {
     display: block;
     width: 100%;
     max-width: 800px;
-}
-
-.form-group label{
-    font-size: 0.75em;
-    margin-bottom: 25px;
-    padding-left: 20px;
 }
 
 .custom-form-control {
@@ -116,16 +111,6 @@ label {
     width: 125px;
 }
 
-.form-container {
-    width: 80%;         /* Adjust width of the form container */
-    margin: 20px auto;  /* Center the form */
-    padding: 20px;
-    border: 1px solid #ddd; /* Light border */
-    border-radius: 5px; /* Rounded corners */
-    background-color: #f9f9f9; /* Light background color */
-    padding-left: 30px; /* Add padding to the entire form */
-}
-
 .helptext {
     font-size: 1rem;
     margin-left: 1rem;
@@ -162,6 +147,7 @@ label {
 .logout-button:hover {
     opacity: .85;
 }
+
 ul.offer-list {
     font-size: 1em;
     list-style-position: inside;
@@ -174,11 +160,81 @@ ul.offer-list {
   }
 
   ul.offer-list p {
-    font-size: 1em; 
-    font-size: 1.3em; 
+    font-size: 1em;
   }
   
   ul.offer-list li p {
     font-size: 1em; 
     display: inline; /* keeps price on the same line */
   }
+
+  /* Container for the form */
+.form-container {
+    width: 50%; /* Adjust width as needed */
+    margin: 50px auto; /* Center the form */
+    padding: 20px;
+    border: 1px solid #ccc; /* Light border */
+    color: #f9f9f9;
+    border-radius: 10px; /* Rounded corners */
+    background-color: #f9f9f9; /* Light background color */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+/* Form heading */
+.form-container h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 24px;
+    color: #333;
+}
+
+/* Form fields container */
+.form-fields {
+    margin-bottom: 20px;
+}
+
+/* Style for form labels */
+.form-fields label {
+    display: block; /* Ensure labels are on their own line */
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+/* Style for form inputs */
+.form-fields input[type="text"],
+.form-fields input[type="email"],
+.form-fields input[type="password"] {
+    width: 100%; /* Full width */
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box; /* Ensure padding doesn't affect width */
+}
+
+/* Style for the submit button */
+.btn {
+    display: block; /* Make the button a block element */
+    width: 100%;
+    padding: 10px;
+    background-color: #28a745; /* Green color */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+/* Hover effect for the button */
+.btn:hover {
+    background-color: #218838; /* Darker green */
+}
+
+/* Fixed size for images */
+.fixed-size-image {
+    width: 200px;  /* Set the desired width */
+    height: 250px; /* Set the desired height */
+    object-fit: cover; /* Ensure the image covers the area without distortion */
+}

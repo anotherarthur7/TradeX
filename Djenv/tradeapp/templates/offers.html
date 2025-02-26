@@ -2,10 +2,13 @@
 {% load static %}
 
 <section>
-    <img
-        src="{{ offer.image }}"
-        alt="{{ offer.title }}"
-    />
+    {% if offer.image %}  <!-- Check if an image exists -->
+        <div class="image-container">
+            <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="fixed-size-image" />
+        </div>
+    {% else %}
+        <p>No image available.</p>  <!-- Fallback if no image is provided -->
+    {% endif %}
 </section>
 
 <h1></h1>
