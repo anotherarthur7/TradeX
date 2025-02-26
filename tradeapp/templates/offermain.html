@@ -1,0 +1,13 @@
+{% extends "base.html" %} {% block content %}
+<head>Offer list:</head>
+<h1></h1>
+<br>
+<ul class="offer-list">
+    {% for offer in offers %}
+        <li>
+            <p><a href="offermain/{{ offer.id }}">{{ offer.title }}</a>: ${{ offer.price }}</p>
+        </li>
+    {% endfor %}
+</ul>
+
+{% endblock %}
