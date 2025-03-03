@@ -50,7 +50,7 @@ def login_view(request):
             print("User authenticated successfully:", user.username)
             login(request, user)
             print("User logged in:", request.user.is_authenticated)
-            return redirect('home')
+            return redirect('profile')
         else:
             print("Authentication failed for username:", username)
             messages.error(request, 'Invalid username or password.')
@@ -60,7 +60,14 @@ def login_view(request):
         
 
     return render(request, 'home.html')
-
+@login_required
+def profile(request):
+    user = request.user
+    return render(request, 'profile.html', {'user': user})
+@login_required
+def user_offers(request):
+     offers = Offer.objects.filter(user=request.user)
+     return render(request, 'user_offers.html', {"offers" : offers})
 def logout_view(request):
     logout(request)
     return redirect('home')
