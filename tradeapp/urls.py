@@ -14,4 +14,5 @@ urlpatterns = [
     path("offermain/<int:req_id>", views.itemIndex, name="itemIndex"),
     path("profile", views.profile, name='profile'),
     path("user_offers", views.user_offers, name='user_offers'),
+    path('edit_offers/<int:offer_id>/', views.edit_offer, name='edit_offer'),
 ]

@@ -1,8 +1,8 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import HttpResponseRedirect
 from .models import Offer
-from .forms import OfferForm
+from .forms import OfferForm, EditOfferForm
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -68,6 +68,17 @@ def profile(request):
 def user_offers(request):
      offers = Offer.objects.filter(user=request.user)
      return render(request, 'user_offers.html', {"offers" : offers})
+@login_required
+def edit_offer(request, offer_id):
+    offer = get_object_or_404(Offer, id=offer_id, user=request.user)
+    if request.method == 'POST':
+        form = EditOfferForm(request.POST, request.FILES, instance=offer)
+        if form.is_valid():
+            form.save()
+            return redirect('user_offers')
+    else:
+        form = EditOfferForm(instance=offer)
+    return render(request, 'edit_offer.html', {'form': form, 'offer': offer})
 def logout_view(request):
     logout(request)
     return redirect('home')

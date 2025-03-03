@@ -19,6 +19,8 @@
                         <strong>Created:</strong> {{ offer.posted_at|date:"F d, Y H:i" }}
                     </p>
                     <p class="offer-price"><strong>Price:</strong> ${{ offer.price }}</p>
+
+                    <a href="{% url 'edit_offer' offer.id %}" class="btn btn-primary">Change offer</a>
                     <br>
                 </div>
             {% endfor %}

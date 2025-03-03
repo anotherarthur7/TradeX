@@ -29,3 +29,7 @@ class OfferForm(ModelForm):
     class Meta:
         model = Offer
         fields = ['title', 'description', 'price', 'image']
+class EditOfferForm(ModelForm):
+    class Meta:
+        model = Offer
+        fields = ['title', 'description', 'price', 'image']
