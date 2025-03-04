@@ -257,3 +257,11 @@ ul.offer-list {
     height: 250px; /* Set the desired height */
     object-fit: cover; /* Ensure the image covers the area without distortion */
 }
+#create-offer-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+#create-offer-link:hover {
+    color: #007bff;
+}

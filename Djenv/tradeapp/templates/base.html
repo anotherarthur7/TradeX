@@ -28,7 +28,7 @@
         <a href="/offermain">
             <span role="img" aria-label="Posts">📰</span>
         </a> | 
-        <a href="/create">
+        <a href="/create"  id="create-offer-link">
             <span role="img" aria-label="Posts">✍</span>
         </a> | 
         <a href="/about">
@@ -36,8 +36,29 @@
         </a> | 
     </nav>
     <main>
-        {% block content %}
+        {% block content %}a
         {% endblock %}
     </main>
+    <script>
+        // Check if the user is logged in
+        const isLoggedIn = "{{ user.is_authenticated }}" === "True";
+
+        // Get the "Create New Offer" link
+        const createOfferLink = document.getElementById("create-offer-link");
+
+        // Add a click event listener to the link
+        createOfferLink.addEventListener("click", function(event) {
+            if (!isLoggedIn) {
+                // Prevent the default behavior (following the link)
+                event.preventDefault();
+
+                // Show a pop-up message
+                alert("You must be logged in to create a new offer.");
+
+                // Redirect to the login page
+                window.location.href = "{% url 'login' %}";
+            }
+        });
+    </script>
 </body>
 </html>
