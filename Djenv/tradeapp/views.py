@@ -20,9 +20,9 @@ def offermain(request):
 	return render(request, "offermain.html", {"offers" : offers})
 
 def itemIndex(request, req_id):
-    offer = get_object_or_404(Offer, id=req_id)  # Fetch the offer
-    is_admin = request.user.is_staff  # Check if the user is an admin
-    is_author = request.user == offer.user  # Check if the user is the author
+    offer = get_object_or_404(Offer, id=req_id)
+    is_admin = request.user.is_staff
+    is_author = request.user == offer.user
     return render(request, "offers.html", {
         "offer": offer,
         "is_admin": is_admin,
@@ -76,7 +76,7 @@ def logout_view(request):
 @login_required
 def edit_offer(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
-    if not (request.user.is_staff or request.user == offer.user):  # Only admins or the author can edit
+    if not (request.user.is_staff or request.user == offer.user):
         return redirect('item_index', req_id=req_id)
 
     if request.method == 'POST':
@@ -92,8 +92,8 @@ def edit_offer(request, req_id):
 @login_required
 def delete_offer(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
-    if not (request.user.is_staff or request.user == offer.user):  # Only admins or the author can delete
+    if not (request.user.is_staff or request.user == offer.user):
         return redirect('item_index', req_id=req_id)
 
     offer.delete()
-    return redirect('home')  # Redirect to home after deletion
+    return redirect('home')
