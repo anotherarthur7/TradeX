@@ -1,4 +1,4 @@
-from django.shortcuts import render, HttpResponse
+from django.shortcuts import render, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import HttpResponseRedirect
 from .models import Offer
@@ -20,7 +20,14 @@ def offermain(request):
 	return render(request, "offermain.html", {"offers" : offers})
 
 def itemIndex(request, req_id):
-	return render(request, "offers.html", {"offer" : Offer.objects.get(id=req_id)}) 
+    offer = get_object_or_404(Offer, id=req_id)  # Fetch the offer
+    is_admin = request.user.is_staff  # Check if the user is an admin
+    is_author = request.user == offer.user  # Check if the user is the author
+    return render(request, "offers.html", {
+        "offer": offer,
+        "is_admin": is_admin,
+        "is_author": is_author,
+    })
 
 @login_required
 def create(request):
@@ -64,3 +71,29 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+
+@login_required
+def edit_offer(request, req_id):
+    offer = get_object_or_404(Offer, id=req_id)
+    if not (request.user.is_staff or request.user == offer.user):  # Only admins or the author can edit
+        return redirect('item_index', req_id=req_id)
+
+    if request.method == 'POST':
+        form = OfferForm(request.POST, request.FILES, instance=offer)
+        if form.is_valid():
+            form.save()
+            return redirect('item_index', req_id=req_id)
+    else:
+        form = OfferForm(instance=offer)
+
+    return render(request, 'edit_offer.html', {'form': form, 'offer': offer})
+
+@login_required
+def delete_offer(request, req_id):
+    offer = get_object_or_404(Offer, id=req_id)
+    if not (request.user.is_staff or request.user == offer.user):  # Only admins or the author can delete
+        return redirect('item_index', req_id=req_id)
+
+    offer.delete()
+    return redirect('home')  # Redirect to home after deletion
