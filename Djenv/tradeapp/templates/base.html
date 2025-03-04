@@ -39,7 +39,10 @@
         {% block content %}a
         {% endblock %}
     </main>
-    <script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <script>
         // Check if the user is logged in
         const isLoggedIn = "{{ user.is_authenticated }}" === "True";
 
@@ -52,11 +55,20 @@
                 // Prevent the default behavior (following the link)
                 event.preventDefault();
 
-                // Show a pop-up message
-                alert("You must be logged in to create a new offer.");
-
-                // Redirect to the login page
-                window.location.href = "{% url 'login' %}";
+                // Show a SweetAlert2 pop-up
+                Swal.fire({
+                    title: "Login Required",
+                    text: "You must be logged in to create a new offer.",
+                    icon: "warning",
+                    confirmButtonText: "Go to Login",
+                    showCancelButton: true,
+                    cancelButtonText: "Cancel",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Redirect to the login page
+                        window.location.href = "{% url 'login' %}";
+                    }
+                });
             }
         });
     </script>

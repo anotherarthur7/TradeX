@@ -2,12 +2,12 @@
 {% load static %}
 
 <section>
-    {% if offer.image %}  <!-- Check if an image exists -->
+    {% if offer.image %}
         <div class="image-container">
             <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="fixed-size-image" />
         </div>
     {% else %}
-        <p>No image available.</p>  <!-- Fallback if no image is provided -->
+        <p>No image available.</p>
     {% endif %}
 </section>
 
@@ -30,13 +30,12 @@
         <p style="margin-left: 10px; font-size: 0.75em;">DATE: {{ offer.posted_date }}</p>
     </li>
 
-    <!-- Add Edit and Delete buttons for admins and the author -->
     {% if is_admin or is_author %}
     <div style="margin-top: 20px;">
-        <a href="{% url 'edit_offer' offer.id %}" class="btn btn-primary" style="display: inline-block; margin-right: 10px; padding: 10px 20px; text-decoration: none; color: white; background-color: #007bff; border-radius: 5px;">Edit Offer</a>
+        <a href="{% url 'edit_offer' offer.id %}" class="btn btn-primary">Edit Offer</a>
         <form action="{% url 'delete_offer' offer.id %}" method="POST" style="display: inline;">
             {% csrf_token %}
-            <button type="submit" class="btn btn-danger" style="padding: 10px 20px; background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;" onclick="return confirm('Are you sure you want to delete this offer?');">Delete Offer</button>
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this offer?');">Delete Offer</button>
         </form>
     </div>
     {% endif %}

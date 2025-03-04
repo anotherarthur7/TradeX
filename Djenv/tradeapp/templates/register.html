@@ -8,7 +8,7 @@
     <form method="POST" class="form-group">
         {% csrf_token %}
         <div class="form-fields">
-            {{ form.as_p }}  <!-- Render form fields as paragraphs for better structure -->
+            {{ form.as_p }}
         </div>
         <button type="submit" class="btn btn-success">Register</button>
     </form>
