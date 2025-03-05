@@ -56,6 +56,15 @@ def thread_create(request):
         form = ThreadForm()
     return render(request, 'forum/thread_create.html', {'form': form})
 
+@user_passes_test(lambda u: u.is_staff)  # Only allow staff (admins) to delete threads
+@login_required
+def thread_delete(request, thread_id):
+    thread = get_object_or_404(Thread, id=thread_id)
+    if request.method == 'POST':
+        thread.delete()  # Delete the thread
+        return redirect('thread_list')  # Redirect to the thread list after deletion
+    return redirect('thread_detail', thread_id=thread.id)  # Fallback redirect
+
 @login_required
 def message_edit(request, message_id):
     message = get_object_or_404(Message, id=message_id)

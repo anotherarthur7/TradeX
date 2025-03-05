@@ -15,6 +15,7 @@ urlpatterns = [
     path('forum/', views.thread_list, name='thread_list'),
     path('forum/thread/<int:thread_id>/', views.thread_detail, name='thread_detail'),
     path('forum/thread/create/', views.thread_create, name='thread_create'),
+    path('forum/thread/<int:thread_id>/delete/', views.thread_delete, name='thread_delete'),
     path('forum/message/<int:message_id>/edit/', views.message_edit, name='message_edit'),
     path("offermain/<int:req_id>", views.itemIndex, name="itemIndex"),
     path('offer/<int:req_id>/', views.itemIndex, name='item_index'),  # Ensure this line exists

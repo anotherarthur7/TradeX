@@ -2,9 +2,8 @@
 {% block content %}
 <div class="forum-container">
     <h1>Forum Threads</h1>
-    {% if user.is_staff %}
-        <a href="{% url 'thread_create' %}" class="button">Create New Thread</a>
-    {% endif %}
+    <br>
+    
     <ul class="thread-list">
         {% for thread in threads %}
             <li>
@@ -13,5 +12,8 @@
             </li>
         {% endfor %}
     </ul>
+    {% if user.is_staff %}
+    <a href="{% url 'thread_create' %}" class="button">Create New Thread</a>
+    {% endif %}
 </div>
 {% endblock %}
