@@ -5,6 +5,17 @@ from .models import models
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from .models import Thread, Message
+
+class ThreadForm(forms.ModelForm):
+    class Meta:
+        model = Thread
+        fields = ['topic']
+
+class MessageForm(forms.ModelForm):
+    class Meta:
+        model = Message
+        fields = ['content']
 
 class OfferForm(ModelForm):
     title = forms.CharField(

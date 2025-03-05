@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="forum-container">
+    <h1>Edit Message</h1>
+    <div class="form-container">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="button">Save</button>
+            <button type="submit" name="delete" class="button delete">Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

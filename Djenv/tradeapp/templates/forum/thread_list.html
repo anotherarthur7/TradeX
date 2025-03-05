@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="forum-container">
+    <h1>Forum Threads</h1>
+    {% if user.is_staff %}
+        <a href="{% url 'thread_create' %}" class="button">Create New Thread</a>
+    {% endif %}
+    <ul class="thread-list">
+        {% for thread in threads %}
+            <li>
+                <a href="{% url 'thread_detail' thread.id %}">{{ thread.topic }}</a>
+                <p>By {{ thread.author.username }} on {{ thread.created_at }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

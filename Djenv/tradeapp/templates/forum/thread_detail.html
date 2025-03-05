@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="forum-container">
+    <h1>{{ thread.topic }}</h1>
+    <p>By {{ thread.author.username }} on {{ thread.created_at }}</p>
+
+    <h2>Messages</h2>
+    <ul class="message-list">
+        {% for message in messages %}
+            <li>
+                <p>{{ message.content }}</p>
+                <p>By {{ message.author.username }} on {{ message.created_at }}</p>
+                {% if user == message.author or user.is_staff %}
+                    <a href="{% url 'message_edit' message.id %}" class="button">Edit</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+
+    <h2>Add a Message</h2>
+    <div class="form-container">
+        <form method="post" id="message-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="button">Post</button>
+        </form>
+    </div>
+</div>
+
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // Check if the user is logged in
+    const isLoggedIn = "{{ user.is_authenticated }}" === "True";
+
+    // Get the message form
+    const messageForm = document.getElementById("message-form");
+
+    // Add a submit event listener to the form
+    messageForm.addEventListener("submit", function(event) {
+        if (!isLoggedIn) {
+            // Prevent the form from submitting
+            event.preventDefault();
+
+            // Show a SweetAlert2 pop-up
+            Swal.fire({
+                title: "Login Required",
+                text: "You must be logged in to post a message.",
+                icon: "warning",
+                confirmButtonText: "Go to Login",
+                showCancelButton: true,
+                cancelButtonText: "Cancel",
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Redirect to the login page
+                    window.location.href = "{% url 'login' %}";
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
