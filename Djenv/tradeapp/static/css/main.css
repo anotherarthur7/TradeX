@@ -150,6 +150,14 @@ label {
 }
 
 ul.offer-list {
+    width: 50%;
+    margin: 10px auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+    color: #000000;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     font-size: 1em;
     list-style-position: inside;
     list-style-type: disc;
@@ -162,7 +170,7 @@ ul.offer-list {
 
   ul.offer-list p {
     font-size: 1em;
-    color:#ccc;
+    color:#000000;
   }
   ul.offer-list a {
     font-size: 1em;
@@ -230,7 +238,6 @@ ul.offer-list {
 
 .btn {
     display: block;
-    width: 100%;
     padding: 10px 20px;
     background-color: #44b78b;
     color: white;
@@ -247,7 +254,6 @@ ul.offer-list {
 
 .btn-danger {
     background-color: #dc3545;
-    border: none;
 }
 
 .btn:hover {
