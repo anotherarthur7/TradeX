@@ -16,8 +16,19 @@ def is_admin(user):
     return user.is_staff
 
 def thread_list(request):
-    threads = Thread.objects.all()
-    return render(request, 'forum/thread_list.html', {'threads': threads})
+    show_closed = request.GET.get('show_closed', 'false').lower() == 'true'
+
+    if show_closed:
+        # Filter threads where the associated offer is closed
+        threads = Thread.objects.filter(offer__is_open=False)
+    else:
+        # Filter threads where the associated offer is open
+        threads = Thread.objects.filter(offer__is_open=True)
+
+    return render(request, 'forum/thread_list.html', {
+        'threads': threads,
+        'show_closed': show_closed,
+    })
 
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
@@ -112,6 +123,7 @@ def itemIndex(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
     is_admin = request.user.is_staff
     is_author = request.user == offer.user
+    thread = offer.threads.first()  # Get the associated thread
 
     # Allow the author to close the offer
     if request.method == 'POST' and is_author:
@@ -124,6 +136,7 @@ def itemIndex(request, req_id):
         "offer": offer,
         "is_admin": is_admin,
         "is_author": is_author,
+        "thread": thread,  # Pass the thread to the template
     })
 
 @login_required
@@ -233,10 +246,12 @@ def profile(request):
 
 @login_required
 def my_offers(request):
-    # Filter offers created by the logged-in user
     open_offers = Offer.objects.filter(user=request.user, is_open=True)
     closed_offers = Offer.objects.filter(user=request.user, is_open=False)
-    return render(request, "user_offers.html", {
+    has_offers = open_offers.exists() or closed_offers.exists()  # Check if user has any offers
+
+    return render(request, "my_offers.html", {
         "open_offers": open_offers,
         "closed_offers": closed_offers,
+        "has_offers": has_offers,  # Pass the flag to the template
     })

@@ -38,7 +38,7 @@ class Thread(models.Model):
     topic = models.CharField(max_length=200)
     author = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(default=timezone.now)
-    offer = models.ForeignKey(Offer, on_delete=models.SET_NULL, null=True, blank=True)
+    offer = models.ForeignKey(Offer, on_delete=models.SET_NULL, related_name='threads', null=True, blank=True)
     def __str__(self):
         return self.topic
 

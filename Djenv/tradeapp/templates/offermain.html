@@ -1,11 +1,5 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Offers</h1>
-<!-- Switch Button -->
-<div class="switch-container">
-    <a href="?show_closed=false" class="btn {% if not show_closed %}active{% endif %}">Show Open Offers</a>
-    <a href="?show_closed=true" class="btn {% if show_closed %}active{% endif %}">Show Closed Offers</a>
-</div>
 
 <!-- Offer Grid -->
 <div class="offer-grid">
@@ -22,26 +16,12 @@
         <p>No offers available.</p>
     {% endfor %}
 </div>
+<!-- Switch Button at the Bottom -->
+<div class="switch-container bottom-switch">
+    <a href="?show_closed=false" class="btn {% if not show_closed %}active{% endif %}">Show Open Offers</a>
+    <a href="?show_closed=true" class="btn {% if show_closed %}active{% endif %}">Show Closed Offers</a>
+</div>
 <style>
-    .switch-container {
-        margin-bottom: 20px;
-    }
-    
-    .switch-container .btn {
-        padding: 10px 20px;
-        margin-right: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        text-decoration: none;
-        color: #333;
-        background-color: #f8f9fa;
-    }
-    
-    .switch-container .btn.active {
-        background-color: #007bff;
-        color: white;
-        border-color: #007bff;
-    }
     .offer-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

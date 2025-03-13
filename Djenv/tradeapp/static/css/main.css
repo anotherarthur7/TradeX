@@ -7,7 +7,7 @@
 body {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     min-height: 100vh;
-    background-color: rgb(225, 212, 212);
+    background-color: rgb(43, 42, 42);
     color: rgb(0, 0, 0);
     font-size: 1.5rem;
 }
@@ -111,7 +111,7 @@ section {
 h1,
 h2 {
     font-size: 1.2rem;
-    color: #000;
+    color: #8a8a8a;
 }
 
 p {
@@ -273,7 +273,7 @@ ul.offer-list {
     background-color:#978dc9;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
     margin: 0 auto; /* Center the container */
     padding: 40px;
     margin-bottom: 20px;
@@ -366,11 +366,11 @@ ul.offer-list {
     width: 100%;
     padding: 8px;
     margin-top: 5px;
-    border: 1px solid rgb(225, 212, 212);
+    border: 1px solid rgb(48, 48, 48);
     border-radius: 4px;
     font-size: 14px;
-    background-color:rgb(225, 212, 212);
-    color: #000000;
+    background-color:rgb(48, 48, 48);
+    color: #ffffff;
 }
 
 .form-group textarea {
@@ -387,7 +387,7 @@ ul.offer-list {
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd;
+    border: 1px solid rgb(48, 48, 48);
     border-radius: 4px;
     font-size: 16px;
     margin-bottom: 10px;
@@ -424,8 +424,8 @@ ul.offer-list {
 .form-fields input[type="email"],
 .form-fields input[type="password"] {
     width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
+    padding: 6px;
+    margin-bottom: 5px;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
@@ -476,13 +476,13 @@ ul.offer-list {
 .thread-title {
     text-align: center;
     font-size: 28px;
-    color: #000000;
+    color: #bababa;
     margin-bottom: 10px;
 }
 .thread-meta {
     text-align: center;
     font-size: 14px;
-    color: #000000;
+    color: #bebebe;
     margin-bottom: 20px;
 }
 
@@ -661,8 +661,8 @@ ul.offer-list {
     display: flex;
     align-items: center;
     gap: 10px;
-    background-color: rgb(225, 212, 212);
-    border: 1px solid rgb(225, 212, 212);
+    background-color:rgb(48, 48, 48);
+    border: 1px solid rgb(48, 48, 48);
     border-radius: 4px;
     padding: 8px;
     color: #ffffff;
@@ -715,14 +715,14 @@ ul.offer-list {
     border-radius: 4px;
     font-size: 16px;
     margin-bottom: 10px;
-    background-color: rgb(225, 212, 212);
-    color: #000000;
+    background-color: rgb(48, 48, 48);
+    color: #ffffff;
 }
 
 
 /* Register Form Styles */
 .register-form .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 6px;
 }
 
 .register-form label {
@@ -775,7 +775,8 @@ ul.offer-list {
 
 .fixed-size-image {
     max-width: 100%;
-    height: auto;
+    width: 330px;
+    height: 330px;
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
@@ -930,4 +931,65 @@ ul.offer-list {
 
 .feature-button:hover {
     background-color: #0056b3;
+}
+/* Closed Thread Indicator */
+.closed-indicator {
+    background-color: #f8d7da; /* Light red background */
+    border-left: 5px solid #dc3545; /* Red border */
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+.closed-label {
+    color: #dc3545; /* Red text */
+    font-weight: bold;
+}
+/* Switch Button Styling */
+.switch-container {
+    margin-bottom: 20px;
+    text-align: center; /* Center the buttons */
+}
+
+.switch-container .btn {
+    padding: 10px 20px;
+    margin-right: 10px;
+    border: 1px solid #3f3f3f;
+    border-radius: 5px;
+    text-decoration: none;
+    color: #ffffff;
+    background-color: #3f3f3f;
+}
+
+.switch-container .btn.active {
+    background-color: #007bff;
+    color: white;
+    border-color: #007bff;
+}
+
+/* Position the switch buttons at the bottom */
+.bottom-switch {
+    position: fixed;
+    bottom: 20px;
+    left: calc(50% + (201px / 2)); /* Adjust for sidebar width */
+    transform: translateX(-50%);
+    background-color: #978dc9;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Ensure it stays above other content */
+}
+
+/* Closed Thread Styling */
+.closed-thread {
+    opacity: 0.7; /* Make closed threads appear faded */
+    background-color: #f8d7da; /* Light red background for closed threads */
+    border-left: 5px solid #dc3545; /* Red border to indicate closed status */
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+.closed-label {
+    color: #dc3545; /* Red text for "Closed" label */
+    font-weight: bold;
+    margin-left: 10px;
 }

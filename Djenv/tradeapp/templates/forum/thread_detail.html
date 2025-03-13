@@ -1,14 +1,25 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>{{ thread.topic }}</h1>
-<p>By {{ thread.author.username }} on {{ thread.created_at }}</p>
+<!-- Thread Title -->
+<h1 class="thread-title">{{ thread.topic }}</h1>
+<p class="thread-meta">By {{ thread.author.username }} on {{ thread.created_at }}</p>
+
+<!-- Closed Thread Indicator -->
+{% if not thread.offer.is_open %}
+    <div class="closed-indicator">
+        <span class="closed-label" style="text-align: center;">This thread is closed.</span>
+    </div>
+    <br>
+{% endif %}
+
+<!-- Thread Container -->
 <div class="forum-container">
-    <h2>Messages</h2>
+    <h2 style="text-align: center;">Messages:</h2>
     <ul class="message-list">
         {% for message in messages %}
             <li>
                 <p>{{ message.content }}</p>
-                <p>By {{ message.author.username }} on {{ message.created_at }}</p>
+                <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>
                 {% if user == message.author or user.is_staff %}
                     <a href="{% url 'message_edit' message.id %}" class="button edit-button">Edit</a>
                 {% endif %}
@@ -16,9 +27,11 @@
         {% endfor %}
     </ul>
 </div>
-{% if user.is_authenticated and not is_immutable %}
+
+<!-- Add Message Form (Visible only to logged-in users and open threads) -->
+{% if user.is_authenticated and thread.offer.is_open %}
 <div class="form-container">
-    <h2>Add a message:</h2>
+    <h2 class="form-title" style="text-align: center;">Add a message:</h2>
     <form method="post" id="message-form">
         {% csrf_token %}
         {{ form.content.label_tag }}
@@ -27,6 +40,8 @@
     </form>
 </div>
 {% endif %}
+
+<!-- Delete Thread Button (Visible only to staff users) -->
 {% if user.is_staff %}
 <div class="delete-button-container">
     <form method="post" action="{% url 'thread_delete' thread.id %}">

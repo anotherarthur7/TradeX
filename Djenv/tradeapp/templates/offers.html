@@ -16,12 +16,17 @@
             <li><p>DATE: {{ offer.posted_date }}</p></li>
         </ul>
 
+        <!-- Link to the associated thread -->
+        {% if thread %}
+            <a href="{% url 'thread_detail' thread.id %}" class="btn btn-info" style="background-color: rgb(44, 93, 76);">View Discussion</a>
+        {% endif %}
+
         <!-- Buttons for Author -->
         {% if is_author %}
             {% if offer.is_open %}
                 <form method="post" style="display: inline;">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Close Offer</button>
+                    <button type="submit" class="btn btn-danger" style="background-color: chocolate;">Close Offer</button>
                 </form>
                 <a href="{% url 'edit_offer' offer.id %}" class="btn btn-edit">Edit Offer</a>
             {% endif %}

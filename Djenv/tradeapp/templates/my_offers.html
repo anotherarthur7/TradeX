@@ -1,39 +1,69 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h1>Your Offers</h1>
 
-<!-- Open Offers -->
-<h2>Open Offers</h2>
-<div class="offer-grid">
-    {% for offer in open_offers %}
-        <div class="offer-item">
-            <a href="{% url 'item_index' offer.id %}">
-                <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
-                <div class="offer-overlay">
-                    <div class="offer-title">{{ offer.title }}</div>
-                </div>
-            </a>
-        </div>
-    {% endfor %}
-</div>
+{% if has_offers %}
+    <!-- Open Offers -->
+    <h2>Open Offers</h2>
+    <div class="offer-grid">
+        {% for offer in open_offers %}
+            <div class="offer-item">
+                <a href="{% url 'item_index' offer.id %}">
+                    <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
+                    <div class="offer-overlay">
+                        <div class="offer-title">{{ offer.title }}</div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <p>No open offers available.</p>
+        {% endfor %}
+    </div>
 
-<!-- Closed Offers -->
-<h2>Closed Offers</h2>
-<div class="offer-grid">
-    {% for offer in closed_offers %}
-        <div class="offer-item">
-            <a href="{% url 'item_index' offer.id %}">
-                <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
-                <div class="offer-overlay">
-                    <div class="offer-title">{{ offer.title }}</div>
-                </div>
-            </a>
-        </div>
-    {% endfor %}
-</div>
-{% endblock %}
+    <!-- Closed Offers -->
+    <h2>Closed Offers</h2>
+    <div class="offer-grid">
+        {% for offer in closed_offers %}
+            <div class="offer-item">
+                <a href="{% url 'item_index' offer.id %}">
+                    <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
+                    <div class="offer-overlay">
+                        <div class="offer-title">{{ offer.title }}</div>
+                    </div>
+                </a>
+            </div>
+        {% empty %}
+            <p>No closed offers available.</p>
+        {% endfor %}
+    </div>
+{% else %}
+    <!-- Display GIF when user has no offers -->
+    <div class="no-offers-container">
+        <img src="{% static 'images/tumbl.gif' %}" alt="No offers" class="no-offers-gif">
+        <p class="no-offers-text">You don't have any offers yet. Create one to get started!</p>
+    </div>
+{% endif %}
 
 <style>
+        /* No Offers Container */
+    .no-offers-container {
+        text-align: center; /* Center the content */
+        margin-top: 50px; /* Add some space at the top */
+    }
+
+    /* No Offers GIF */
+    .no-offers-gif {
+        max-width: 100%; /* Ensure the GIF fits within the container */
+        height: auto; /* Maintain aspect ratio */
+        border-radius: 10px; /* Optional: Add rounded corners */
+    }
+
+    /* No Offers Text */
+    .no-offers-text {
+        font-size: 1.5rem; /* Increase font size */
+        color: #c5c5c5; /* Gray text color */
+        margin-top: 20px; /* Add space between the GIF and text */
+    }
     .offer-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
