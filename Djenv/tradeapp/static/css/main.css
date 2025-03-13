@@ -111,12 +111,12 @@ section {
 h1,
 h2 {
     font-size: 1.2rem;
-    color: #8a8a8a;
+    color: #ffffff;
 }
 
 p {
     font-size: 1rem;
-    color: #000;
+    color: #ffffff;
 }
 
 a {
@@ -426,7 +426,7 @@ ul.offer-list {
     width: 100%;
     padding: 6px;
     margin-bottom: 5px;
-    border: 1px solid #ccc;
+    border: 1px solid rgb(48, 48, 48);
     border-radius: 5px;
     font-size: 16px;
     box-sizing:border-box;
@@ -476,13 +476,13 @@ ul.offer-list {
 .thread-title {
     text-align: center;
     font-size: 28px;
-    color: #bababa;
+    color: #ffffff;
     margin-bottom: 10px;
 }
 .thread-meta {
     text-align: center;
     font-size: 14px;
-    color: #bebebe;
+    color: #d0d0d0;
     margin-bottom: 20px;
 }
 

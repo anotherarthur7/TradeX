@@ -222,19 +222,13 @@ def delete_offer(request, req_id):
 @login_required
 def profile(request):
     if request.method == 'POST':
-        # Update email
-        new_email = request.POST.get('email')
-        if new_email:
-            request.user.email = new_email
-            request.user.save()
-            messages.success(request, 'Email updated successfully.')
-
         # Change password
         password_form = PasswordChangeForm(request.user, request.POST)
         if password_form.is_valid():
             user = password_form.save()
             update_session_auth_hash(request, user)  # Keep the user logged in
             messages.success(request, 'Password updated successfully.')
+            return redirect('profile')  # Redirect to avoid resubmission
         else:
             messages.error(request, 'Please correct the error below.')
     else:

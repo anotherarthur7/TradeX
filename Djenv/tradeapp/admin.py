@@ -12,3 +12,12 @@ admin.site.register(Profile)
 
 # another_arthurr
 # new_password
+
+# luba
+# ksp77777
+
+# sparklight
+# wrongPswrd909
+
+# NBAPROPLAYER2009
+# lebronSucks2006

@@ -12,13 +12,73 @@
             <input type="text" name="username" id="username" required>
         </div>
         
+        <!-- Password Field with Toggle -->
         <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" name="password" id="password" required>
+            <div class="password-toggle">
+                <input type="password" name="password" id="password" required>
+                <button type="button" class="toggle-password" aria-label="Toggle password visibility" data-target="password">
+                    👁️
+                </button>
+            </div>
         </div>
+
         <button type="submit" class="btn btn-success">Login</button>
     </form>
     <br>
     <p>Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
 </div>
+
+<!-- JavaScript for Password Peeking -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Toggle password visibility
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const passwordField = document.querySelector(`#${targetId}`);
+
+                // Toggle the type attribute
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+
+                // Toggle the button text/icon (optional)
+                this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+            });
+        });
+    });
+</script>
+
+<!-- CSS for Password Toggle Button -->
+<style>
+    /* Password Toggle Button Styling */
+    .password-toggle {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-toggle input {
+        padding-right: 40px; /* Add space for the button */
+        width: 100%; /* Ensure input takes full width */
+    }
+
+    .password-toggle .toggle-password {
+        position: absolute;
+        right: 10px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 0;
+        margin: 0;
+        outline: none;
+    }
+
+    .password-toggle .toggle-password:hover {
+        opacity: 0.8;
+    }
+</style>
 {% endblock %}
