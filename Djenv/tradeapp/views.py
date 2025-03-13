@@ -84,7 +84,7 @@ def message_edit(request, message_id):
     return render(request, 'forum/message_edit.html', {'form': form, 'message': message})
 
 def home(request):
-	return render(request, "home.html")
+    return render(request, 'home.html', {'is_home': True})
 
 def about(request):
 	return render(request, "about.html")

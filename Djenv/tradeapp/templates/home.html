@@ -8,32 +8,36 @@
     <video autoplay muted loop class="hero-video">
         <source src="{% static 'videos/vid.mp4' %}" type="video/mp4">
         <!-- Fallback image if video is not supported -->
-        <img src="{% static 'images/hero-fallback.jpg' %}" alt="Hero Fallback Image">
+        <img src="" alt="Hero Fallback Image">
     </video>
     <div class="hero-content">
         <h1 style="color: rgba(255, 255, 255, 0.386);">Welcome to TradeX!</h1>
         <p style="color: rgba(255, 255, 255, 0.386);">Explore the best offers and connect with others in our community.</p>
-        <a href="{% url 'register' %}" class="hero-button">Join Now</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'my_offers' %}" class="hero-button">Your Offers</a>
+        {% else %}
+            <a href="{% url 'register' %}" class="hero-button">Join Now</a>
+        {% endif %}
     </div>
 </div>
 
 <!-- Feature Sections -->
 <div class="feature-section">
-    <div class="feature-item" style="background-image: url(static/images/dealerThree.png);">
+    <div class="feature-item" style="background-image: url('{% static 'images/dealerThree.png' %}');">
         <div class="feature-overlay">
             <h2 style="color: rgba(255, 255, 255, 0.386);">Discover Offers</h2>
             <p style="color: rgba(255, 255, 255, 0.386);">Find the best deals and services tailored for you.</p>
             <a href="{% url 'offermain' %}" class="feature-button">Explore Offers</a>
         </div>
     </div>
-    <div class="feature-item" style="background-image: url(static/images/dealerOne.png);">
+    <div class="feature-item" style="background-image: url('{% static 'images/dealerOne.png' %}');">
         <div class="feature-overlay">
             <h2 style="color: rgba(255, 255, 255, 0.399);">Join the Forum</h2>
             <p style="color: rgba(255, 255, 255, 0.455);">Engage with our community and share your thoughts.</p>
             <a href="{% url 'thread_list' %}" class="feature-button">Visit Forum</a>
         </div>
     </div>
-    <div class="feature-item" style="background-image: url(static/images/dealerTwo.png);">
+    <div class="feature-item" style="background-image: url('{% static 'images/dealerTwo.png' %}');">
         <div class="feature-overlay">
             <h2 style="color: rgba(255, 255, 255, 0.386);">Create Your Offer</h2>
             <p style="color: rgba(255, 255, 255, 0.386);">Share your services or products with the world.</p>
