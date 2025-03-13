@@ -1,17 +1,14 @@
 {% extends "base.html" %}
 {% block content %}
-<!-- Thread Title -->
-<h1 class="thread-title">{{ thread.topic }}</h1>
-<p class="thread-meta">By {{ thread.author.username }} on {{ thread.created_at }}</p>
-
-<!-- Thread Container -->
+<h1>{{ thread.topic }}</h1>
+<p>By {{ thread.author.username }} on {{ thread.created_at }}</p>
 <div class="forum-container">
     <h2>Messages</h2>
     <ul class="message-list">
         {% for message in messages %}
             <li>
                 <p>{{ message.content }}</p>
-                <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>
+                <p>By {{ message.author.username }} on {{ message.created_at }}</p>
                 {% if user == message.author or user.is_staff %}
                     <a href="{% url 'message_edit' message.id %}" class="button edit-button">Edit</a>
                 {% endif %}
@@ -19,11 +16,9 @@
         {% endfor %}
     </ul>
 </div>
-
-<!-- Add Message Form (Visible only to logged-in users) -->
-{% if user.is_authenticated %}
+{% if user.is_authenticated and not is_immutable %}
 <div class="form-container">
-    <h2 class="form-title">Add a message:</h2>
+    <h2>Add a message:</h2>
     <form method="post" id="message-form">
         {% csrf_token %}
         {{ form.content.label_tag }}
@@ -32,8 +27,6 @@
     </form>
 </div>
 {% endif %}
-
-<!-- Delete Thread Button (Visible only to staff users) -->
 {% if user.is_staff %}
 <div class="delete-button-container">
     <form method="post" action="{% url 'thread_delete' thread.id %}">

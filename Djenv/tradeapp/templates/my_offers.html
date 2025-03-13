@@ -1,9 +1,13 @@
 {% extends "base.html" %}
 {% block content %}
+<h1>Your Offers</h1>
+
+<!-- Open Offers -->
+<h2>Open Offers</h2>
 <div class="offer-grid">
-    {% for offer in offers %}
+    {% for offer in open_offers %}
         <div class="offer-item">
-            <a href="offermain/{{ offer.id }}">
+            <a href="{% url 'item_index' offer.id %}">
                 <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
                 <div class="offer-overlay">
                     <div class="offer-title">{{ offer.title }}</div>
@@ -12,6 +16,22 @@
         </div>
     {% endfor %}
 </div>
+
+<!-- Closed Offers -->
+<h2>Closed Offers</h2>
+<div class="offer-grid">
+    {% for offer in closed_offers %}
+        <div class="offer-item">
+            <a href="{% url 'item_index' offer.id %}">
+                <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
+                <div class="offer-overlay">
+                    <div class="offer-title">{{ offer.title }}</div>
+                </div>
+            </a>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
 
 <style>
     .offer-grid {

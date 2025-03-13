@@ -10,7 +10,7 @@ from .models import Thread, Message
 class ThreadForm(forms.ModelForm):
     class Meta:
         model = Thread
-        fields = ['topic']
+        fields = ['topic', 'offer']
 
 class MessageForm(forms.ModelForm):
     class Meta:

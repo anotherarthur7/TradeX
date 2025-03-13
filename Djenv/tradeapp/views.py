@@ -1,10 +1,12 @@
 from django.shortcuts import render, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import HttpResponseRedirect
 from .models import Offer
 from .forms import OfferForm
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from .models import Thread, Message
 from .forms import ThreadForm, MessageForm
@@ -21,11 +23,18 @@ def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
     message_list = thread.messages.all()
 
+    # Check if the thread is immutable (i.e., associated offer is closed)
+    is_immutable = thread.offer and not thread.offer.is_open
+
     if request.method == 'POST':
         if not request.user.is_authenticated:
-            # Redirect unauthorized users to the login page
             messages.error(request, "You must be logged in to post a message.")
-            return redirect('login')  # Replace 'login' with your login URL name
+            return redirect('login')
+
+        # Prevent posting if the thread is immutable
+        if is_immutable:
+            messages.error(request, "This thread is closed and cannot be modified.")
+            return redirect('thread_detail', thread_id=thread.id)
 
         form = MessageForm(request.POST)
         if form.is_valid():
@@ -41,9 +50,10 @@ def thread_detail(request, thread_id):
         'thread': thread,
         'messages': message_list,
         'form': form,
+        'is_immutable': is_immutable,
     })
 
-@user_passes_test(is_admin)
+@staff_member_required
 @login_required
 def thread_create(request):
     if request.method == 'POST':
@@ -57,14 +67,14 @@ def thread_create(request):
         form = ThreadForm()
     return render(request, 'forum/thread_create.html', {'form': form})
 
-@user_passes_test(lambda u: u.is_staff)  # Only allow staff (admins) to delete threads
+@staff_member_required
 @login_required
 def thread_delete(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
     if request.method == 'POST':
-        thread.delete()  # Delete the thread
-        return redirect('thread_list')  # Redirect to the thread list after deletion
-    return redirect('thread_detail', thread_id=thread.id)  # Fallback redirect
+        thread.delete()
+        return redirect('thread_list')
+    return redirect('thread_detail', thread_id=thread.id)
 
 @login_required
 def message_edit(request, message_id):
@@ -90,13 +100,26 @@ def about(request):
 	return render(request, "about.html")
 
 def offermain(request):
-	offers = Offer.objects.all()
-	return render(request, "offermain.html", {"offers" : offers})
+    show_closed = request.GET.get('show_closed', 'false').lower() == 'true'  # Convert to boolean
+    if show_closed:
+        offers = Offer.objects.filter(is_open=False)
+    else:
+        offers = Offer.objects.filter(is_open=True)
+    return render(request, "offermain.html", {"offers": offers, "show_closed": show_closed})
+
 
 def itemIndex(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
     is_admin = request.user.is_staff
     is_author = request.user == offer.user
+
+    # Allow the author to close the offer
+    if request.method == 'POST' and is_author:
+        offer.is_open = False
+        offer.save()
+        messages.success(request, "The offer has been closed.")
+        return redirect('item_index', req_id=req_id)
+
     return render(request, "offers.html", {
         "offer": offer,
         "is_admin": is_admin,
@@ -148,13 +171,22 @@ def logout_view(request):
 @login_required
 def edit_offer(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
-    if not (request.user.is_staff or request.user == offer.user):
+    
+    # Only the author can edit the offer
+    if request.user != offer.user:
+        messages.error(request, "You do not have permission to edit this offer.")
+        return redirect('item_index', req_id=req_id)
+
+    # Prevent editing if the offer is closed
+    if not offer.is_open:
+        messages.error(request, "This offer is closed and cannot be edited.")
         return redirect('item_index', req_id=req_id)
 
     if request.method == 'POST':
         form = OfferForm(request.POST, request.FILES, instance=offer)
         if form.is_valid():
             form.save()
+            messages.success(request, "Offer updated successfully.")
             return redirect('item_index', req_id=req_id)
     else:
         form = OfferForm(instance=offer)
@@ -164,10 +196,14 @@ def edit_offer(request, req_id):
 @login_required
 def delete_offer(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
+    
+    # Only the author or admin can delete the offer
     if not (request.user.is_staff or request.user == offer.user):
+        messages.error(request, "You do not have permission to delete this offer.")
         return redirect('item_index', req_id=req_id)
 
     offer.delete()
+    messages.success(request, "Offer deleted successfully.")
     return redirect('home')
 
 @login_required
@@ -198,7 +234,9 @@ def profile(request):
 @login_required
 def my_offers(request):
     # Filter offers created by the logged-in user
-    user_offers = Offer.objects.filter(user=request.user)
-    return render(request, 'my_offers.html', {
-        'offers': user_offers,
+    open_offers = Offer.objects.filter(user=request.user, is_open=True)
+    closed_offers = Offer.objects.filter(user=request.user, is_open=False)
+    return render(request, "user_offers.html", {
+        "open_offers": open_offers,
+        "closed_offers": closed_offers,
     })
