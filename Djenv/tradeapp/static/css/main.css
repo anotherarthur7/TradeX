@@ -5,22 +5,101 @@
 }
 
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     min-height: 100vh;
-    background-color: black;
-    color: whitesmoke;
+    background-color: rgb(225, 212, 212);
+    color: rgb(0, 0, 0);
     font-size: 1.5rem;
 }
 
 nav {
-    padding: 1rem;
-    background-color: #44b78b;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    display: flex;
+    padding: 10px;
+    background-color: #978dc9;
+    justify-content: space-between;
     color: white;
     font-size: 1.5rem;
+    border-bottom: 1px solid #ddd;
+}
+.nav-left, .nav-right {
+    display: flex;
+    gap: 10px;
+}
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 201px; /* Adjust width as needed */
+    height: 100vh;
+    background-color: #978dc9; /* Dark background */
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    overflow-y: auto; /* Allow scrolling if content overflows */
 }
 
+.sidebar-item {
+    margin-bottom: 15px;
+}
+
+.sidebar-item a {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: #000000; /* Light text color */
+    font-size: 16px;
+    transition: color 0.3s ease;
+}
+
+.sidebar-item a:hover {
+    color: #3498db; /* Highlight color on hover */
+}
+
+.sidebar-item span[role="img"] {
+    font-size: 20px;
+    margin-right: 10px;
+}
+
+.sidebar-text {
+    white-space: nowrap; /* Prevent text from wrapping */
+}
+.sidebar-top {
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #000000; /* Separator line */
+}
+
+.sidebar-top p {
+    color: #000000; /* Light text color */
+    font-size: 16px;
+    margin: 0 0 10px 0;
+}
+
+.sidebar-top .logout-link,
+.sidebar-top .auth-link {
+    color: #111b30; /* Blue color for links */
+    text-decoration: none;
+    font-size: 14px;
+    transition: color 0.3s ease;
+}
+
+.sidebar-top .logout-link:hover,
+.sidebar-top .auth-link:hover {
+    color: #4ccf6dd6; /* Highlight color on hover */
+}
+
+.sidebar-top .auth-separator {
+    color: #000000; /* Light text color */
+    margin: 0 5px;
+    font-size: 12px;
+}
+
+/* Main Content Styles */
 main {
-    padding: 1rem;
+    margin-left: 240px; /* Sidebar width + padding */
+    padding: 20px;
 }
 
 section {
@@ -32,6 +111,7 @@ section {
 h1,
 h2 {
     font-size: 1.2rem;
+    color: #000;
 }
 
 p {
@@ -73,7 +153,8 @@ label {
 }
 
 .custom-button {
-    background-color: #44b78b;
+    background-color: #0266d1;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     border: none;
     color: white;
     padding: 10px 20px;
@@ -84,6 +165,9 @@ label {
     margin: 4px 2px;
     cursor: pointer;
     border-radius: 5px;
+}
+.custom-button:hover {
+    background-color: #013d7e;
 }
 
 .form-with-validation {
@@ -113,6 +197,7 @@ label {
 }
 
 .helptext {
+    color: #000;
     font-size: 1rem;
     margin-left: 1rem;
 }
@@ -131,9 +216,10 @@ label {
 }
 
 .form-error {
-    color: red;
+    color: #ff6b6b;
+    font-size: 0.8em;
     margin-top: 5px;
-  }
+}
 
 .logout {
     display: inline-block;
@@ -153,10 +239,10 @@ ul.offer-list {
     width: 50%;
     margin: 10px auto;
     padding: 10px;
-    border: 1px solid #ccc;
+    border: 1px solid #44b78b;
     color: #000000;
     border-radius: 10px;
-    background-color: #f9f9f9;
+    background-color: #44b78b;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     font-size: 1em;
     list-style-position: inside;
@@ -174,7 +260,7 @@ ul.offer-list {
   }
   ul.offer-list a {
     font-size: 1em;
-    color:#23a564;
+    color:#000000;
   }
   
   
@@ -184,26 +270,131 @@ ul.offer-list {
   }
 
 .form-container {
-    width: 50%;
-    margin: 50px auto;
-    padding: 20px;
-    border: 1px solid #ccc;
+    background-color:#978dc9;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin: 0 auto; /* Center the container */
+    padding: 40px;
+    margin-bottom: 20px;
+    margin-top: 40px;
+    width: 100%;
+    max-width: 600px;
+
+}
+.form-title {
+    font-size: 20px;
     color: #000000;
-    border-radius: 10px;
-    background-color: #f9f9f9;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    margin-bottom: 10px;
+    text-align: left;
+}
+/* Hide the "Content" label */
+.form-container label {
+    display: none;
+}
+/* Style the textarea */
+.form-container textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    background-color: rgb(225, 212, 212);
+    color: #000000;
 }
 .form-container p{
-    color: #15573e;
+    color: #000000;
 }
 .form-group {
     color: #000000;
     padding: 10px;
-    font-size: 0.75em;
-    margin: 30px auto;
-    border: 1px solid #ccc;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 0.9em;
+    margin-bottom: 15px;
+    border: 1px solid #978dc9;
+    border-radius: 5px;
+    background-color: #978dc9;
+}
+.form-group label {
+    font-weight: bold;
+    color: #000000;
+}
+.button-container {
+    text-align: center; /* Center the button horizontally */
+    margin-top: 20px; /* Add space above the button */
+    margin-bottom: 20px; /* Add space below the button */
+}
+.button-container .button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.button-container .button:hover {
+    background-color: #0056b3;
+}
+
+.delete-button-container {
+    text-align: center; /* Center the button horizontally */
+    margin-top: 20px; /* Add space above the button */
+    margin-bottom: 20px; /* Add space below the button */
+}
+.delete-button-container .button {
+    padding: 10px 20px;
+    background-color: #d90021;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.delete-button-container .button:hover {
+    background-color: #941900;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid rgb(225, 212, 212);
+    border-radius: 4px;
+    font-size: 14px;
+    background-color:rgb(225, 212, 212);
+    color: #000000;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.form-container a{
+    color:rgb(29, 34, 195);
+}
+
+.form-container form input,
+.form-container form textarea {
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.form-container form p {
+    margin-bottom: 15px;
 }
 
 .form-container h1 {
@@ -211,6 +402,11 @@ ul.offer-list {
     margin-bottom: 20px;
     font-size: 24px;
     color: #000000;
+}
+.form-container h2 {
+    font-size: 20px;
+    color: #000000;
+    margin-bottom: 10px;
 }
 
 .form-fields {
@@ -233,19 +429,22 @@ ul.offer-list {
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
-    box-sizing: border-box;
+    box-sizing:border-box;
 }
 
 .btn {
-    display: block;
-    padding: 10px 20px;
-    background-color: #44b78b;
-    color: white;
+    background-color: #0266d1;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
     border: none;
-    border-radius: 5px;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
     font-size: 16px;
+    margin: 4px 2px;
     cursor: pointer;
-    margin-right: 10px;
+    border-radius: 5px;
 }
 
 .btn-primary {
@@ -274,27 +473,44 @@ ul.offer-list {
     color: #44b78b;
 }
 /* Thread list styles */
+.thread-title {
+    text-align: center;
+    font-size: 28px;
+    color: #000000;
+    margin-bottom: 10px;
+}
+.thread-meta {
+    text-align: center;
+    font-size: 14px;
+    color: #000000;
+    margin-bottom: 20px;
+}
+
 .thread-list {
     list-style: none;
     color: #000000;
     padding: 0;
 }
+.thread-list button{
+    color:#0056b3
+}
 
 .thread-list li {
-    background-color: #ffffff;
+    background-color: #978dc9;
     color: #000000;
-    border: 1px solid #ddd;
+    border: 1px solid #978dc9;
     border-radius: 4px;
     margin-bottom: 10px;
     padding: 15px;
 }
 
 .thread-list li a {
-    font-size: 18px;
-    color: #14513a;
+    font-size: 22px;
+    color: #000000;
 }
 
 .thread-list li p {
+    font-size: 12px;
     margin: 5px 0;
     color: #000000;
 }
@@ -315,37 +531,41 @@ ul.offer-list {
 }
 
 .message-list li {
-    background-color: #f9f9f9;
-    color:#000000;
-    border: 1px solid #ddd;
+    background-color: #978dc9;
+    border: 1px solid #978dc9;
     border-radius: 4px;
     margin-bottom: 10px;
     padding: 15px;
 }
-
+.message-meta {
+    color: #888;
+    font-size: 0.9em;
+}
 .message-list li p {
-    margin: 10px;
-    color: #000;
+    margin: 10px 0;
+    color: #000000;
 }
 
 .message-list li p:first-child {
+    font-size: 20px;
     font-weight: bold;
     color: #000000;
 }
 
 .message-list li p:last-child {
     color: #000000;
+    font-size: 12px;
 }
 /* Forum-specific styles */
 .forum-container {
-    background-color: #fff;
+    background-color: #978dc9;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    padding: 10px;
-    margin-top: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
 }
-
 .forum-container li p{
+    font-size: 12px;
     color: #000000;
 }
 .forum-container h1 {
@@ -389,6 +609,26 @@ ul.offer-list {
     cursor: pointer;
 }
 /* Delete button styles */
+.button {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+.button:hover {
+    background-color: #0056b3;
+}
+.edit-button {
+    background-color: #007bff;
+    margin-top: 10px;
+    font-size: 12px;
+}
 .delete-button {
     background-color: #dc3545; /* Red color for delete button */
     color: #ffffff; /* White text */
@@ -397,9 +637,297 @@ ul.offer-list {
     border-radius: 4px;
     cursor: pointer;
     font-size: 16px;
-    margin-bottom: 20px; /* Add some space below the button */
+    display: inline-block; /* Ensure the button doesn't take full width */
 }
 
 .delete-button:hover {
     background-color: #c82333; /* Darker red on hover */
+}
+.post-button {
+    background-color: #007bff;
+}
+
+.post-button:hover {
+    background-color: #0056b3;
+}
+/* File Input Styling */
+.file-input-group {
+    position: relative;
+}
+
+.custom-file-input {
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: rgb(225, 212, 212);
+    border: 1px solid rgb(225, 212, 212);
+    border-radius: 4px;
+    padding: 8px;
+    color: #ffffff;
+}
+
+.custom-file-input input[type="file"] {
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.file-input-text {
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    flex: 1;
+    color: #888;
+}
+
+.custom-file-button {
+    font-family:'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    padding: 6px 12px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.custom-file-button:hover {
+    background-color: #0056b3;
+}
+
+/* Hide the default file input text */
+.custom-file-input input[type="file"]::file-selector-button {
+    display: none;
+}
+.form-container label {
+    display: none;
+}
+.form-container textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-bottom: 10px;
+    background-color: rgb(225, 212, 212);
+    color: #000000;
+}
+
+
+/* Register Form Styles */
+.register-form .form-group {
+    margin-bottom: 15px;
+}
+
+.register-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.register-form input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+.register-form .form-error {
+    color: #882d36;
+    font-size: 0.9em;
+    margin-top: 5px;
+}
+
+/* Hide validation markers initially */
+.register-form input:invalid {
+    box-shadow: none;
+}
+
+/* Show validation markers only after submission */
+.register-form.submitted input:invalid {
+    box-shadow: 0 0 5px #dc3545;
+}
+/* Offer Container */
+.offer-container {
+    display: flex;
+    align-items: flex-start; /* Align items to the top */
+    gap: 40px; /* Space between image and details */
+    padding: 20px;
+    max-width: 1200px; /* Adjust as needed */
+    margin: 0 auto; /* Center the container */
+}
+
+/* Image Container */
+.image-container {
+    margin-top: 120px;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Center the image vertically */
+}
+
+.fixed-size-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Details Container */
+.details-container {
+    margin-top: 60px;
+    flex: 2;
+    background-color: #978dc9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.details-container h1 {
+    font-size: 2em;
+    margin-bottom: 20px;
+    color: #000000;
+}
+
+.offer-details {
+    list-style-type: none;
+    padding: 0;
+}
+
+.offer-details li {
+    margin-bottom: 20px;
+}
+
+.offer-details h2 {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #000000;
+}
+
+.offer-details p {
+    font-size: 1em;
+    color: #000000;
+    margin: 5px 0;
+}
+
+/* Hero Section */
+.hero-section {
+    position: relative;
+    height: 100vh; /* Full screen height */
+    overflow: hidden; /* Ensure no scrollbars */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #ffffff;
+    margin: 0; /* Remove any default margin */
+    padding: 0; /* Remove any default padding */
+}
+
+.hero-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensure the video covers the entire hero section */
+    z-index: -1; /* Place the video behind the content */
+}
+
+.hero-content {
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+    padding: 40px;
+    border-radius: 10px;
+    z-index: 1; /* Ensure content is above the video */
+}
+
+.hero-content h1 {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+.hero-content p {
+    font-size: 1.5em;
+    margin-bottom: 30px;
+}
+
+.hero-button {
+    padding: 15px 30px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2em;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.hero-button:hover {
+    background-color: #0056b3;
+}
+
+/* Feature Sections */
+.feature-section {
+    display: flex;
+    flex-direction: column; /* Stack items vertically */
+    gap: 20px; /* Space between items */
+    padding: 20px; /* Add some padding */
+}
+
+.feature-item {
+    width: 100%; /* Full width */
+    height: 500px; /* Adjust height as needed */
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.feature-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5); /* Semi-transparent overlay */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #ffffff;
+    padding: 20px;
+}
+
+.feature-overlay h2 {
+    font-size: 2em;
+    margin-bottom: 10px;
+}
+
+.feature-overlay p {
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+.feature-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #ffffff;
+    border: none;
+    border-radius: 5px;
+    font-size: 1em;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.feature-button:hover {
+    background-color: #0056b3;
 }

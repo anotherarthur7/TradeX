@@ -21,4 +21,6 @@ urlpatterns = [
     path('offer/<int:req_id>/', views.itemIndex, name='item_index'),  # Ensure this line exists
     path('offer/<int:req_id>/edit/', views.edit_offer, name='edit_offer'),
     path('offer/<int:req_id>/delete/', views.delete_offer, name='delete_offer'),
+    path('profile/', views.profile, name='profile'),
+    path('my-offers/', views.my_offers, name='my_offers'),
 ]

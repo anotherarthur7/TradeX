@@ -1,9 +1,8 @@
 {% extends "base.html" %}
 {% block content %}
+<h1 style="text-align: center;">Forum Threads</h1>
+<br>
 <div class="forum-container">
-    <h1>Forum Threads</h1>
-    <br>
-    
     <ul class="thread-list">
         {% for thread in threads %}
             <li>
@@ -12,8 +11,10 @@
             </li>
         {% endfor %}
     </ul>
-    {% if user.is_staff %}
-    <a href="{% url 'thread_create' %}" class="button">Create New Thread</a>
-    {% endif %}
 </div>
+{% if user.is_staff %}
+<div class="button-container">
+    <a href="{% url 'thread_create' %}" class="button">Create New Thread</a>
+</div>
+{% endif %}
 {% endblock %}

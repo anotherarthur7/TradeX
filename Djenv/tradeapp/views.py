@@ -4,10 +4,11 @@ from django.shortcuts import HttpResponseRedirect
 from .models import Offer
 from .forms import OfferForm
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
 from .models import Thread, Message
 from .forms import ThreadForm, MessageForm
+from django.contrib.auth.forms import PasswordChangeForm
 
 def is_admin(user):
     return user.is_staff
@@ -168,3 +169,36 @@ def delete_offer(request, req_id):
 
     offer.delete()
     return redirect('home')
+
+@login_required
+def profile(request):
+    if request.method == 'POST':
+        # Update email
+        new_email = request.POST.get('email')
+        if new_email:
+            request.user.email = new_email
+            request.user.save()
+            messages.success(request, 'Email updated successfully.')
+
+        # Change password
+        password_form = PasswordChangeForm(request.user, request.POST)
+        if password_form.is_valid():
+            user = password_form.save()
+            update_session_auth_hash(request, user)  # Keep the user logged in
+            messages.success(request, 'Password updated successfully.')
+        else:
+            messages.error(request, 'Please correct the error below.')
+    else:
+        password_form = PasswordChangeForm(request.user)
+
+    return render(request, 'profile.html', {
+        'password_form': password_form,
+    })
+
+@login_required
+def my_offers(request):
+    # Filter offers created by the logged-in user
+    user_offers = Offer.objects.filter(user=request.user)
+    return render(request, 'my_offers.html', {
+        'offers': user_offers,
+    })

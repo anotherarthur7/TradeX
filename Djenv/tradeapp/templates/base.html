@@ -4,60 +4,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>
-        {% block title %}
-            Django App
-        {% endblock %}
-    </title>
+    <title>{% block title %}Django App{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
 </head>
 <body>
-    <header>
-        <nav>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <!-- Sidebar Top Section -->
+        <div class="sidebar-top">
             {% if user.is_authenticated %}
-                <p>Welcome, {{ user.username }}! <a href="{% url 'logout' %}">Logout</a></p>
+                <p>Welcome, {{ user.username }}!</p>
+                <a href="{% url 'logout' %}" class="logout-link">Logout</a>
             {% else %}
-                <p><a href="{% url 'login' %}">Login</a> | <a href="{% url 'register' %}">Register</a></p>
+                <a href="{% url 'login' %}" class="auth-link">Login</a>
+                <span class="auth-separator"> or </span>
+                <a href="{% url 'register' %}" class="auth-link">Register</a>
             {% endif %}
-        </nav>
-    </header>
-    <nav>
-        <a href="/">
-            <span role="img" aria-label="Home">🏠</span>
-        </a> | 
-        <a href="/offermain">
-            <span role="img" aria-label="Posts">📰</span>
-        </a> | 
-        <a href="/create"  id="create-offer-link">
-            <span role="img" aria-label="Posts">✍</span>
-        </a> | 
-        <a href="/forum">
-            <span role="img" aria-label="Forum">💬</span>
-        </a> | 
-        <a href="/about">
-            <span role="img" aria-label="About">😀</span>
-        </a> | 
-    </nav>
+        </div>
+
+        <!-- Sidebar Menu -->
+        <div class="sidebar-item">
+            <a href="/">
+                <span role="img" aria-label="Home">🏠</span>
+                <span class="sidebar-text">Home</span>
+            </a>
+        </div>
+        <div class="sidebar-item">
+            <a href="/offermain">
+                <span role="img" aria-label="Offers">📦</span>
+                <span class="sidebar-text">Offers</span>
+            </a>
+        </div>
+        <div class="sidebar-item">
+            <a href="/create" id="create-offer-link">
+                <span role="img" aria-label="Create Offer">✍️</span>
+                <span class="sidebar-text">Create Offer</span>
+            </a>
+        </div>
+        <div class="sidebar-item">
+            <a href="/forum">
+                <span role="img" aria-label="Forum">💬</span>
+                <span class="sidebar-text">Forum</span>
+            </a>
+        </div>
+        <div class="sidebar-item">
+            <a href="/about">
+                <span role="img" aria-label="About">😀</span>
+                <span class="sidebar-text">About</span>
+            </a>
+        </div>
+        {% if user.is_authenticated %}
+            <div class="sidebar-item">
+                <a href="{% url 'profile' %}">
+                    <span role="img" aria-label="Profile">👤</span>
+                    <span class="sidebar-text">Profile</span>
+                </a>
+            </div>
+            <div class="sidebar-item">
+                <a href="{% url 'my_offers' %}">
+                    <span role="img" aria-label="My Offers">📄</span>
+                    <span class="sidebar-text">My Offers</span>
+                </a>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Main Content -->
     <main>
-        {% block content %}a
-        {% endblock %}
+        {% block content %}{% endblock %}
     </main>
 
+    <!-- Include SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
-  <script>
-
+    <script>
         const isLoggedIn = "{{ user.is_authenticated }}" === "True";
-
-
         const createOfferLink = document.getElementById("create-offer-link");
-
 
         createOfferLink.addEventListener("click", function(event) {
             if (!isLoggedIn) {
                 event.preventDefault();
-
-                // Show a SweetAlert2 pop-up
                 Swal.fire({
                     title: "Login Required",
                     text: "You must be logged in to create a new offer.",
@@ -71,17 +96,6 @@
                     }
                 });
             }
-        });
-
-        // Add event listeners to protected links/forms
-        const protectedLinks = document.querySelectorAll(".protected-link");
-        protectedLinks.forEach(link => {
-            link.addEventListener("click", showLoginPopup);
-        });
-
-        const protectedForms = document.querySelectorAll(".protected-form");
-        protectedForms.forEach(form => {
-            form.addEventListener("submit", showLoginPopup);
         });
     </script>
 </body>
