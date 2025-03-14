@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Thread Title -->
+<h1 class="thread-title">{{ thread.topic }}</h1>
+<p class="thread-meta">By {{ thread.author.username }} on {{ thread.created_at }}</p>
+
+<!-- Closed Thread Indicator -->
+{% if not thread.offer.is_open %}
+    <div class="closed-indicator">
+        <span class="closed-label" style="text-align: center;">This thread is closed.</span>
+    </div>
+    <br>
+{% endif %}
+
+<!-- Thread Container -->
+<div class="forum-container">
+    <h2 style="text-align: center;">Messages:</h2>
+    <ul class="message-list">
+        {% for message in messages %}
+            <li>
+                <p>{{ message.content }}</p>
+                <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>
+                {% if user == message.author or user.is_staff %}
+                    <a href="{% url 'message_edit' message.id %}" class="button edit-button">Edit</a>
+                {% endif %}
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Add Message Form (Visible only to logged-in users and open threads) -->
+{% if user.is_authenticated and thread.offer.is_open %}
+<div class="form-container">
+    <h2 class="form-title" style="text-align: center;">Add a message:</h2>
+    <form method="post" id="message-form">
+        {% csrf_token %}
+        {{ form.content.label_tag }}
+        {{ form.content }}
+        <button type="submit" class="button post-button">Post</button>
+    </form>
+</div>
+{% endif %}
+
+<!-- Delete Thread Button (Visible only to staff users) -->
+{% if user.is_staff %}
+<div class="delete-button-container">
+    <form method="post" action="{% url 'thread_delete' thread.id %}">
+        {% csrf_token %}
+        <button type="submit" class="button delete-button" onclick="return confirm('Are you sure you want to delete this thread?');">Delete Thread</button>
+    </form>
+</div>
+{% endif %}
+
+<!-- Include SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    // Check if the user is logged in
+    const isLoggedIn = "{{ user.is_authenticated }}" === "True";
+
+    // Get the message form
+    const messageForm = document.getElementById("message-form");
+
+    // Add a submit event listener to the form
+    if (messageForm) {
+        messageForm.addEventListener("submit", function(event) {
+            if (!isLoggedIn) {
+                // Prevent the form from submitting
+                event.preventDefault();
+
+                // Show a SweetAlert2 pop-up
+                Swal.fire({
+                    title: "Login Required",
+                    text: "You must be logged in to post a message.",
+                    icon: "warning",
+                    confirmButtonText: "Go to Login",
+                    showCancelButton: true,
+                    cancelButtonText: "Cancel",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Redirect to the login page
+                        window.location.href = "{% url 'login' %}";
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Create an account{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h1>Create an Account</h1>
+    <form method="POST" class="form-group register-form">
+        {% csrf_token %}
+        <div class="form-fields">
+            <!-- Username Field -->
+            <div class="form-group">
+                <label for="{{ form.username.id_for_label }}">Username</label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div class="form-error">{{ form.username.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Email Field -->
+            <div class="form-group">
+                <label for="{{ form.email.id_for_label }}">Email</label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div class="form-error">{{ form.email.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Password1 Field with Toggle -->
+            <div class="form-group">
+                <label for="{{ form.password1.id_for_label }}">Password</label>
+                <div class="password-toggle">
+                    {{ form.password1 }}
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility" data-target="{{ form.password1.id_for_label }}">
+                        👁️
+                    </button>
+                </div>
+                {% if form.password1.errors %}
+                    <div class="form-error">{{ form.password1.errors|striptags }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Password2 Field with Toggle -->
+            <div class="form-group">
+                <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+                <div class="password-toggle">
+                    {{ form.password2 }}
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility" data-target="{{ form.password2.id_for_label }}">
+                        👁️
+                    </button>
+                </div>
+                {% if form.password2.errors %}
+                    <div class="form-error">{{ form.password2.errors|striptags }}</div>
+                {% endif %}
+            </div>
+        </div>
+        <button type="submit" class="btn btn-success">Register</button>
+    </form>
+    <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
+</div>
+
+<!-- JavaScript for Password Peeking -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Toggle password visibility
+        const toggleButtons = document.querySelectorAll('.toggle-password');
+
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function () {
+                const targetId = this.getAttribute('data-target');
+                const passwordField = document.querySelector(`#${targetId}`);
+
+                // Toggle the type attribute
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+
+                // Toggle the button text/icon (optional)
+                this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+            });
+        });
+
+        // Form validation
+        const registerForm = document.querySelector('.register-form');
+        registerForm.addEventListener('submit', function (event) {
+            if (!registerForm.checkValidity()) {
+                event.preventDefault();
+                registerForm.classList.add('submitted');
+            }
+        });
+    });
+</script>
+
+<!-- CSS for Password Toggle Button -->
+<style>
+    /* Password Toggle Button Styling */
+    .password-toggle {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-toggle input {
+        padding-right: 40px; /* Add space for the button */
+        width: 100%; /* Ensure input takes full width */
+    }
+
+    .password-toggle .toggle-password {
+        position: absolute;
+        right: 10px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2em;
+        padding: 0;
+        margin: 0;
+        outline: none;
+    }
+
+    .password-toggle .toggle-password:hover {
+        opacity: 0.8;
+    }
+</style>
+{% endblock %}

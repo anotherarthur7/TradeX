@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<br>
+<h2 style="text-align: center;">Create New Thread</h2>
+<div class="form-container">
+    <div class="form-container">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="button" style="text-align: center;">Create</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
