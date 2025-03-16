@@ -3,6 +3,17 @@
 <br>
 <h2 style="text-align: center;">Create New Thread</h2>
 <div class="form-container">
+    <!-- Display error messages -->
+    {% if messages %}
+        <div class="messages" style="color: brown;">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
     <div class="form-container">
         <form method="post">
             {% csrf_token %}

@@ -17,19 +17,35 @@ def is_admin(user):
     return user.is_staff
 
 def thread_list(request):
-    show_closed = request.GET.get('show_closed', 'false').lower() == 'true'
+    # Get all threads
+    threads = Thread.objects.all()
 
-    if show_closed:
-        # Filter threads where the associated offer is closed
-        threads = Thread.objects.filter(offer__is_open=False)
+    # Separate threads into categories
+    open_threads = [thread for thread in threads if thread.offer and thread.offer.is_open]
+    closed_threads = [thread for thread in threads if thread.offer and not thread.offer.is_open]
+    technical_threads = [thread for thread in threads if not thread.offer]
+
+    # Determine which threads to display based on the 'show_closed' and 'show_technical' parameters
+    show_closed = request.GET.get('show_closed', 'false').lower() == 'true'
+    show_technical = request.GET.get('show_technical', 'true').lower() == 'true'  # Default to True
+
+    # Ensure only one of the parameters is active at a time
+    if show_technical:
+        displayed_threads = technical_threads
+    elif show_closed:
+        displayed_threads = closed_threads
     else:
-        # Filter threads where the associated offer is open
-        threads = Thread.objects.filter(offer__is_open=True)
+        displayed_threads = open_threads
 
     return render(request, 'forum/thread_list.html', {
-        'threads': threads,
+        'open_threads': open_threads,
+        'closed_threads': closed_threads,
+        'technical_threads': technical_threads,
+        'displayed_threads': displayed_threads,
         'show_closed': show_closed,
+        'show_technical': show_technical,
     })
+
 
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
@@ -46,6 +62,11 @@ def thread_detail(request, thread_id):
         # Prevent posting if the thread is immutable
         if is_immutable:
             messages.error(request, "This thread is closed and cannot be modified.")
+            return redirect('thread_detail', thread_id=thread.id)
+
+        # Restrict posting to admin users only
+        if not request.user.is_staff:
+            messages.error(request, "Only admin users can post messages in technical threads.")
             return redirect('thread_detail', thread_id=thread.id)
 
         form = MessageForm(request.POST)
@@ -73,8 +94,18 @@ def thread_create(request):
         if form.is_valid():
             thread = form.save(commit=False)
             thread.author = request.user
-            thread.save()
-            return redirect('thread_list')
+
+            # Ensure the offer is either open or null
+            if thread.offer and not thread.offer.is_open:
+                messages.error(request, "You cannot attach a thread to a closed offer.")
+            else:
+                # Save the thread if the offer is open or null
+                thread.save()
+                messages.success(request, "Thread created successfully!")
+                return redirect('thread_list')
+        else:
+            # Handle form errors
+            messages.error(request, "Please correct the errors below.")
     else:
         form = ThreadForm()
     return render(request, 'forum/thread_create.html', {'form': form})
