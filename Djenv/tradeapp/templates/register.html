@@ -7,35 +7,23 @@
     <h1>Create an Account</h1>
 
     <!-- Display error messages -->
-    {% if messages %}
-        {% for message in messages %}
-            {% if message.tags == 'error' %}  <!-- Only display error messages -->
-                <div class="alert alert-danger">
-                    {{ message }}
-                </div>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
+    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
 
-    <form method="POST" class="form-group register-form">
+    <form method="POST" class="form-group register-form" id="register-form">
         {% csrf_token %}
         <div class="form-fields">
             <!-- Username Field -->
             <div class="form-group">
                 <label for="{{ form.username.id_for_label }}">Username</label>
                 {{ form.username }}
-                {% if form.username.errors %}
-                    <div class="form-error">{{ form.username.errors|striptags }}</div>
-                {% endif %}
+                <div class="form-error" id="id_username-error"></div>
             </div>
 
             <!-- Email Field -->
             <div class="form-group">
                 <label for="{{ form.email.id_for_label }}">Email</label>
                 {{ form.email }}
-                {% if form.email.errors %}
-                    <div class="form-error">{{ form.email.errors|striptags }}</div>
-                {% endif %}
+                <div class="form-error" id="id_email-error"></div>
             </div>
 
             <!-- Password1 Field with Toggle -->
@@ -47,9 +35,7 @@
                         👁️
                     </button>
                 </div>
-                {% if form.password1.errors %}
-                    <div class="form-error">{{ form.password1.errors|striptags }}</div>
-                {% endif %}
+                <div class="form-error" id="id_password1-error"></div>
             </div>
 
             <!-- Password2 Field with Toggle -->
@@ -61,15 +47,64 @@
                         👁️
                     </button>
                 </div>
-                {% if form.password2.errors %}
-                    <div class="form-error">{{ form.password2.errors|striptags }}</div>
-                {% endif %}
+                <div class="form-error" id="id_password2-error"></div>
             </div>
         </div>
         <button type="submit" class="btn btn-success">Register</button>
     </form>
     <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
 </div>
+
+<!-- JavaScript for AJAX Form Submission -->
+<script>
+    $(document).ready(function () {
+        // Clear error messages when typing in any field
+        $('#register-form input').on('input', function () {
+            var fieldName = $(this).attr('name');
+            $('#id_' + fieldName + '-error').html('').hide();
+            $('#error-message').hide();
+        });
+
+        $('#register-form').on('submit', function (e) {
+            e.preventDefault();  // Prevent the default form submission
+
+            // Clear previous error messages
+            $('#error-message').hide().html('');
+            $('.form-error').html('');
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
+                }
+            });
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "register" %}',
+                data: $(this).serialize(),
+                success: function (response) {
+                    console.log(response);  // Debug: Log the response to the console
+                    if (response.success) {
+                        window.location.href = '{% url "login" %}';  // Redirect on success
+                    } else {
+                        // Display form errors
+                        if (response.errors) {
+                            for (var field in response.errors) {
+                                $('#id_' + field + '-error').html(response.errors[field].join('<br>')).show();
+                            }
+                        } else {
+                            $('#error-message').html('An unexpected error occurred.').show();  // Display general error message
+                        }
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error(xhr.responseText);  // Debug: Log the error to the console
+                    $('#error-message').html('An error occurred. Please try again.').show();
+                }
+            });
+        });
+    });
+</script>
 
 <!-- JavaScript for Password Peeking -->
 <script>
@@ -89,15 +124,6 @@
                 // Toggle the button text/icon (optional)
                 this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
             });
-        });
-
-        // Form validation
-        const registerForm = document.querySelector('.register-form');
-        registerForm.addEventListener('submit', function (event) {
-            if (!registerForm.checkValidity()) {
-                event.preventDefault();
-                registerForm.classList.add('submitted');
-            }
         });
     });
 </script>
@@ -130,6 +156,26 @@
 
     .password-toggle .toggle-password:hover {
         opacity: 0.8;
+    }
+
+    /* Error Message Styling */
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+
+    .form-error {
+        color: #dc3545;
+        font-size: 0.875em;
+        margin-top: 5px;
     }
 </style>
 {% endblock %}

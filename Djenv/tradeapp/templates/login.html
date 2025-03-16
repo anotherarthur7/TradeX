@@ -6,18 +6,9 @@
 <div class="form-container">
     <h1>Login</h1>
 
-    <!-- Display error messages -->
-    {% if messages %}
-        {% for message in messages %}
-            {% if message.tags == 'error' %}  <!-- Only display error messages -->
-                <div class="alert alert-danger">
-                    {{ message }}
-                </div>
-            {% endif %}
-        {% endfor %}
-    {% endif %}
+    <div id="error-message" class="alert alert-danger" style="display: none;"></div>  
 
-    <form method="POST">
+    <form method="POST" id="login-form">
         {% csrf_token %}
         <div class="form-group">
             <h2 style="font-size: large;">Username</h2>
@@ -60,6 +51,30 @@
 
                 // Toggle the button text/icon (optional)
                 this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+            });
+        });
+    });
+</script>
+
+<script>
+    $(document).ready(function () {
+        $('#login-form').on('submit', function (e) {
+            e.preventDefault();  // Prevent the default form submission
+
+            $.ajax({
+                type: 'POST',
+                url: '{% url "login" %}',
+                data: $(this).serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        window.location.href = '{% url "home" %}';  // Redirect on success
+                    } else {
+                        $('#error-message').html(response.error).show();  // Display error message
+                    }
+                },
+                error: function (xhr, status, error) {
+                    $('#error-message').html('An error occurred. Please try again.').show();
+                }
             });
         });
     });
