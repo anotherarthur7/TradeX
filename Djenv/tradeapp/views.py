@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import HttpResponseRedirect
 from .models import Offer
+from django.http import JsonResponse
 from .forms import OfferForm
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -144,18 +145,18 @@ def thread_delete(request, thread_id):
 
 @login_required
 def message_delete(request, message_id):
-    # Get the message or return a 404 error
+    # Fetch the message or return a 404 error if it doesn't exist
     message = get_object_or_404(Message, id=message_id)
 
-    # Ensure only admin users can delete messages
-    if not request.user.is_staff:
-        return redirect('forum/thread_detail', thread_id=message.thread.id)
-
-    # Delete the message
-    message.delete()
+    # Ensure the user is an admin or the message author
+    if request.user.is_staff or request.user == message.author:
+        message.delete()
+        messages.success(request, 'Message deleted successfully.')
+    else:
+        messages.error(request, 'You do not have permission to delete this message.')
 
     # Redirect back to the thread detail page
-    return redirect('forum/thread_detail', thread_id=message.thread.id)
+    return redirect('thread_detail', thread_id=message.thread.id)
 
 def home(request):
     return render(request, 'home.html', {'is_home': True})
@@ -218,26 +219,15 @@ def login_view(request):
         return redirect('home')
     
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username')
+        password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-        
         if user is not None:
-            print("User authenticated successfully:", user.username)
             login(request, user)
-            print("User logged in:", request.user.is_authenticated)
-            return redirect('home')
+            return JsonResponse({'success': True})
         else:
-            print("Authentication failed for username:", username)
-            messages.error(request, 'Invalid username or password.')
-            # Render the login page with the error message and retain form data
-            return render(request, 'login.html', {'username': username})
-    else:
-        print("GET request received")
-        return render(request, 'login.html')
-        
-
-    return render(request, 'home.html')
+            return JsonResponse({'success': False, 'error': 'Invalid username or password.'})
+    return render(request, 'login.html')
 
 def logout_view(request):
     logout(request)
