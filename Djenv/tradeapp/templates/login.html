@@ -11,14 +11,12 @@
     <form method="POST" id="login-form">
         {% csrf_token %}
         <div class="form-group">
-            <h2 style="font-size: large;">Username</h2>
             <label for="username">Username</label>
             <input type="text" name="username" id="username" required>
         </div>
         
         <!-- Password Field with Toggle -->
         <div class="form-group">
-            <h2 style="font-size: large;">Password</h2>
             <label for="password">Password</label>
             <div class="password-toggle">
                 <input type="password" name="password" id="password" required>
@@ -26,6 +24,13 @@
                     👁️
                 </button>
             </div>
+        </div>
+
+        <!-- Remember Me Checkbox -->
+        <div class="form-group">
+            <label for="remember_me">
+                <input type="checkbox" name="remember_me" id="remember_me"> Remember Me
+            </label>
         </div>
 
         <button type="submit" class="btn btn-success">Login</button>
@@ -56,28 +61,59 @@
     });
 </script>
 
+<!-- JavaScript for AJAX Login and Remember Me -->
 <script>
     $(document).ready(function () {
+        // Handle form submission
         $('#login-form').on('submit', function (e) {
             e.preventDefault();  // Prevent the default form submission
 
+            // Serialize form data
+            var formData = $(this).serialize();
+            
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')  // Include CSRF token
+                }
+            });
+
+            // Send AJAX request
             $.ajax({
                 type: 'POST',
                 url: '{% url "login" %}',
-                data: $(this).serialize(),
+                data: formData,
                 success: function (response) {
                     if (response.success) {
-                        window.location.href = '{% url "home" %}';  // Redirect on success
+                        // Redirect to home page on success
+                        window.location.href = '{% url "home" %}';
                     } else {
-                        $('#error-message').html(response.error).show();  // Display error message
+                        // Display error message
+                        $('#error-message').html(response.error).show();
                     }
                 },
                 error: function (xhr, status, error) {
+                    // Display error message
                     $('#error-message').html('An error occurred. Please try again.').show();
                 }
             });
         });
+
+        // Check for "Remember Me" cookie on page load
+        var rememberMeCookie = getCookie('remember_me');
+        if (rememberMeCookie) {
+            var credentials = JSON.parse(rememberMeCookie);
+            $('#username').val(credentials.username);
+            $('#password').val(credentials.password);
+            $('#remember_me').prop('checked', true);
+        }
     });
+
+    // Helper function to get a cookie value
+    function getCookie(name) {
+        const cookies = document.cookie.split(';').map(cookie => cookie.trim());
+        const cookie = cookies.find(cookie => cookie.startsWith(`${name}=`));
+        return cookie ? decodeURIComponent(cookie.split('=')[1]) : null;
+    }
 </script>
 
 <!-- CSS for Password Toggle Button -->
@@ -122,6 +158,21 @@
         color: #721c24;
         background-color: #f8d7da;
         border-color: #f5c6cb;
+    }
+
+    /* Checkbox Styling */
+    .form-group input[type="checkbox"] {
+        width: auto; /* Override the 100% width for checkboxes */
+        margin-right: 10px; /* Add some spacing between the checkbox and label */
+        cursor: pointer; /* Change cursor to pointer for better UX */
+    }
+
+    .form-group label {
+        display: flex; /* Align checkbox and label horizontally */
+        align-items: center; /* Center items vertically */
+        font-weight: bold;
+        color: #000000;
+        cursor: pointer; /* Change cursor to pointer for better UX */
     }
 </style>
 {% endblock %}

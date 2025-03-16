@@ -5,20 +5,109 @@
 {% block content %}
 <div class="container">
     <h1>Pending Offers</h1>
-    <ul>
+    <ul id="pending-offers-list">
         {% for offer in pending_offers %}
-            <li>
+            <li id="offer-{{ offer.id }}">
                 <h2>{{ offer.title }}</h2>
                 <p>{{ offer.description }}</p>
                 <p>Price: {{ offer.price }}</p>
                 <p>Posted by: {{ offer.user.username }}</p>
                 <p>Posted on: {{ offer.posted_date }}</p>
-                <a href="{% url 'approve_offer' offer.id %}" class="btn btn-success">Approve</a>
-                <a href="{% url 'reject_offer' offer.id %}" class="btn btn-danger">Reject</a>
+                <button class="btn btn-success approve-btn" data-offer-id="{{ offer.id }}">Approve</button>
+                <button class="btn btn-danger reject-btn" data-offer-id="{{ offer.id }}">Reject</button>
+                <span id="status-{{ offer.id }}" class="status-message"></span>
             </li>
         {% empty %}
             <p>No pending offers.</p>
         {% endfor %}
     </ul>
 </div>
+
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- JavaScript for AJAX Requests -->
+<script>
+    $(document).ready(function () {
+        // Approve Offer
+        $('.approve-btn').on('click', function () {
+            var offerId = $(this).data('offer-id');
+            var $statusMessage = $('#status-' + offerId);
+
+            // Disable buttons to prevent multiple clicks
+            $(this).prop('disabled', true);
+            $('.reject-btn[data-offer-id="' + offerId + '"]').prop('disabled', true);
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Send AJAX request
+            $.ajax({
+                type: 'POST',
+                url: '{% url "approve_offer" 0 %}'.replace('0', offerId),
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Update status message
+                        $statusMessage.text('Approved').css('color', 'green');
+
+                        // Remove the offer from the list after a delay
+                        setTimeout(function () {
+                            $('#offer-' + offerId).fadeOut(500, function () {
+                                $(this).remove();
+                            });
+                        }, 1000);
+                    } else {
+                        $statusMessage.text('Failed to approve').css('color', 'red');
+                    }
+                },
+                error: function () {
+                    $statusMessage.text('An error occurred').css('color', 'red');
+                }
+            });
+        });
+
+        // Reject Offer
+        $('.reject-btn').on('click', function () {
+            var offerId = $(this).data('offer-id');
+            var $statusMessage = $('#status-' + offerId);
+
+            // Disable buttons to prevent multiple clicks
+            $(this).prop('disabled', true);
+            $('.approve-btn[data-offer-id="' + offerId + '"]').prop('disabled', true);
+
+            // Send AJAX request
+            $.ajax({
+                type: 'POST',
+                url: '{% url "reject_offer" 0 %}'.replace('0', offerId),
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function (response) {
+                    if (response.success) {
+                        // Update status message
+                        $statusMessage.text('Rejected').css('color', 'red');
+
+                        // Remove the offer from the list after a delay
+                        setTimeout(function () {
+                            $('#offer-' + offerId).fadeOut(500, function () {
+                                $(this).remove();
+                            });
+                        }, 1000);
+                    } else {
+                        $statusMessage.text('Failed to reject').css('color', 'red');
+                    }
+                },
+                error: function () {
+                    $statusMessage.text('An error occurred').css('color', 'red');
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
