@@ -7,6 +7,11 @@ from django.utils import timezone
 
 
 class Offer(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
     title = models.CharField(max_length=200)
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -14,6 +19,7 @@ class Offer(models.Model):
     posted_date = models.DateTimeField(default=timezone.now)
     user = models.ForeignKey(User, on_delete=models.CASCADE) 
     is_open = models.BooleanField(default=True) 
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending') 
     def __str__(self):
         return self.title
 

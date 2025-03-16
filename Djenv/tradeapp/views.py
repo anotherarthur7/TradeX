@@ -12,6 +12,10 @@ from .models import Thread, Message
 from .forms import ThreadForm, MessageForm
 from django.utils import timezone
 from .forms import CustomPasswordChangeForm
+from django.core.mail import send_mail
+from django.conf import settings
+from django.contrib.auth.models import User
+
 
 def is_admin(user):
     return user.is_staff
@@ -195,13 +199,20 @@ def create(request):
         if form.is_valid():
             offer = form.save(commit=False)
             offer.user = request.user
+            offer.status = 'pending' 
             offer.save()
+            messages.success(request, 'Your offer has been submitted and is pending approval.')
             return redirect('home')
     else:
         form = OfferForm()
     return render(request, 'create.html', {'form': form})
 
 def login_view(request):
+    
+    storage = messages.get_messages(request)
+    for message in storage:
+        pass 
+
     if request.user.is_authenticated:
         print("User logged in:", request.user.is_authenticated)
         return redirect('home')
@@ -289,7 +300,6 @@ def profile(request):
         'password_form': password_form,
     })
 
-
 @login_required
 def my_offers(request):
     open_offers = Offer.objects.filter(user=request.user, is_open=True)
@@ -301,3 +311,70 @@ def my_offers(request):
         "closed_offers": closed_offers,
         "has_offers": has_offers,  # Pass the flag to the template
     })
+
+@user_passes_test(lambda u: u.is_staff)  # Restrict to admin users
+def review_offers(request):
+    pending_offers = Offer.objects.filter(status='pending')
+    return render(request, 'review_offers.html', {'pending_offers': pending_offers})
+
+@user_passes_test(lambda u: u.is_staff)
+def approve_offer(request, offer_id):
+    offer = get_object_or_404(Offer, id=offer_id)
+    offer.status = 'approved'
+    offer.save()
+
+    # Notify the user via email
+    send_mail(
+        'Offer Approved',
+        f'Your offer "{offer.title}" has been approved.',
+        settings.DEFAULT_FROM_EMAIL,
+        [offer.user.email],
+        fail_silently=False,
+    )
+
+    messages.success(request, f'Offer "{offer.title}" has been approved.')
+    return redirect('review_offers')
+
+@user_passes_test(lambda u: u.is_staff)
+def reject_offer(request, offer_id):
+    offer = get_object_or_404(Offer, id=offer_id)
+    offer.status = 'rejected'
+    offer.save()
+
+    # Notify the user via email
+    send_mail(
+        'Offer Rejected',
+        f'Your offer "{offer.title}" has been rejected.',
+        settings.DEFAULT_FROM_EMAIL,
+        [offer.user.email],
+        fail_silently=False,
+    )
+
+    messages.error(request, f'Offer "{offer.title}" has been rejected.')
+    return redirect('review_offers')
+
+@user_passes_test(lambda u: u.is_staff)  # Restrict to admin users
+def manage_users(request):
+    users = User.objects.all()  # Get all users
+    return render(request, 'manage_users.html', {'users': users})
+
+@user_passes_test(lambda u: u.is_staff)
+def edit_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        # Handle form submission to update user details
+        user.username = request.POST.get('username')
+        user.email = request.POST.get('email')
+        user.save()
+        messages.success(request, f'User "{user.username}" updated successfully.')
+        return redirect('manage_users')
+    return render(request, 'edit_user.html', {'user': user})
+
+@user_passes_test(lambda u: u.is_staff)
+def delete_user(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        user.delete()
+        messages.success(request, f'User "{user.username}" deleted successfully.')
+        return redirect('manage_users')
+    return render(request, 'confirm_delete_user.html', {'user': user})
