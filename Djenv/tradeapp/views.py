@@ -200,6 +200,8 @@ def login_view(request):
         else:
             print("Authentication failed for username:", username)
             messages.error(request, 'Invalid username or password.')
+            # Render the login page with the error message and retain form data
+            return render(request, 'login.html', {'username': username})
     else:
         print("GET request received")
         return render(request, 'login.html')
