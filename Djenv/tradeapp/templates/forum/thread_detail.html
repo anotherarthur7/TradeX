@@ -15,15 +15,15 @@
 <!-- Thread Container -->
 <div class="forum-container">
     <h2 style="text-align: center;">Messages:</h2>
-    <ul class="message-list">
+    <ul class="message-list" id="message-list">
         {% for message in messages %}
-            <li>
-                <p>{{ message.content }}</p>
+            <li id="message-{{ message.id }}">
+                <p id="message-content-{{ message.id }}">{{ message.content }}</p>
                 <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>
                 
                 <!-- Edit Button (Visible only to the author and within 10 minutes of creation) -->
                 {% if user == message.author and message.is_editable %}
-                    <a href="{% url 'message_edit' message.id %}" class="button edit-button">Edit</a>
+                    <button class="button edit-button" data-message-id="{{ message.id }}">Edit</button>
                 {% endif %}
 
                 <!-- Delete Message Button (Visible only to staff users) -->
@@ -63,39 +63,140 @@
 </div>
 {% endif %}
 
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <!-- Include SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<!-- JavaScript for AJAX Message Posting and Editing -->
 <script>
-    // Check if the user is logged in
-    const isLoggedIn = "{{ user.is_authenticated }}" === "True";
+    $(document).ready(function () {
+        // Handle form submission
+        $('#message-form').on('submit', function (e) {
+            e.preventDefault();  // Prevent the default form submission
 
-    // Get the message form
-    const messageForm = document.getElementById("message-form");
+            // Serialize form data
+            var formData = $(this).serialize();
 
-    // Add a submit event listener to the form
-    if (messageForm) {
-        messageForm.addEventListener("submit", function(event) {
-            if (!isLoggedIn) {
-                // Prevent the form from submitting
-                event.preventDefault();
+            // Send AJAX request
+            $.ajax({
+                type: 'POST',
+                url: '{% url "thread_detail" thread.id %}',
+                data: formData,
+                success: function (response) {
+                    if (response.success) {
+                        // Append the new message to the list
+                        var newMessage = `
+                            <li id="message-${response.message.id}">
+                                <p id="message-content-${response.message.id}">${response.message.content}</p>
+                                <p class="message-meta">By ${response.message.author} on ${response.message.created_at}</p>
+                                <button class="button edit-button" data-message-id="${response.message.id}">Edit</button>
+                            </li>
+                        `;
+                        $('#message-list').append(newMessage);
 
-                // Show a SweetAlert2 pop-up
-                Swal.fire({
-                    title: "Login Required",
-                    text: "You must be logged in to post a message.",
-                    icon: "warning",
-                    confirmButtonText: "Go to Login",
-                    showCancelButton: true,
-                    cancelButtonText: "Cancel",
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Redirect to the login page
-                        window.location.href = "{% url 'login' %}";
+                        // Clear the form
+                        $('#message-form')[0].reset();
+
+                        // Show success message
+                        Swal.fire({
+                            title: "Success",
+                            text: "Message posted successfully.",
+                            icon: "success",
+                            confirmButtonText: "OK",
+                        });
+                    } else {
+                        // Show error message
+                        Swal.fire({
+                            title: "Error",
+                            text: response.error,
+                            icon: "error",
+                            confirmButtonText: "OK",
+                        });
                     }
-                });
-            }
+                },
+                error: function (xhr, status, error) {
+                    // Show error message
+                    Swal.fire({
+                        title: "Error",
+                        text: "An error occurred. Please try again.",
+                        icon: "error",
+                        confirmButtonText: "OK",
+                    });
+                }
+            });
         });
-    }
+
+        // Handle edit button click
+        $(document).on('click', '.edit-button', function () {
+            var messageId = $(this).data('message-id');
+            var messageContent = $('#message-content-' + messageId).text();
+
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+
+            // Show an edit dialog
+            Swal.fire({
+                title: "Edit Message",
+                input: "textarea",
+                inputValue: messageContent,
+                showCancelButton: true,
+                confirmButtonText: "Save",
+                cancelButtonText: "Cancel",
+                inputValidator: (value) => {
+                    if (!value) {
+                        return "Message content cannot be empty.";
+                    }
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Send AJAX request to update the message
+                    $.ajax({
+                        type: 'POST',
+                        url: '{% url "message_edit" 0 %}'.replace('0', messageId),
+                        data: {
+                            content: result.value,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                // Update the message content
+                                $('#message-content-' + messageId).text(response.message.content);
+
+                                // Show success message
+                                Swal.fire({
+                                    title: "Success",
+                                    text: "Message updated successfully.",
+                                    icon: "success",
+                                    confirmButtonText: "OK",
+                                });
+                            } else {
+                                // Show error message
+                                Swal.fire({
+                                    title: "Error",
+                                    text: response.error,
+                                    icon: "error",
+                                    confirmButtonText: "OK",
+                                });
+                            }
+                        },
+                        error: function (xhr, status, error) {
+                            // Show error message
+                            Swal.fire({
+                                title: "Error",
+                                text: "An error occurred. Please try again.",
+                                icon: "error",
+                                confirmButtonText: "OK",
+                            });
+                        }
+                    });
+                }
+            });
+        });
+    });
 </script>
 {% endblock %}

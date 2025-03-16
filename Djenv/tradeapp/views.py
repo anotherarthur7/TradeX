@@ -15,8 +15,9 @@ from django.utils import timezone
 from .forms import CustomPasswordChangeForm
 from django.core.mail import send_mail
 from django.conf import settings
+import json
 from django.contrib.auth.models import User
-
+from django.views.decorators.http import require_POST
 
 def is_admin(user):
     return user.is_staff
@@ -51,25 +52,27 @@ def thread_list(request):
         'show_technical': show_technical,
     })
 
-@login_required
+@require_POST
 def message_edit(request, message_id):
     message = get_object_or_404(Message, id=message_id)
 
     # Check if the user is the author and the message is editable
     if request.user != message.author or not message.is_editable():
-        messages.error(request, "You cannot edit this message.")
-        return redirect('thread_detail', thread_id=message.thread.id)
+        return JsonResponse({'success': False, 'error': 'You cannot edit this message.'})
 
-    if request.method == 'POST':
-        form = MessageForm(request.POST, instance=message)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Message updated successfully.")
-            return redirect('thread_detail', thread_id=message.thread.id)
+    # Update the message content
+    form = MessageForm(request.POST, instance=message)
+    if form.is_valid():
+        form.save()
+        return JsonResponse({
+            'success': True,
+            'message': {
+                'id': message.id,
+                'content': message.content,
+            }
+        })
     else:
-        form = MessageForm(instance=message)
-
-    return render(request, 'forum/message_edit.html', {'form': form, 'message': message})
+        return JsonResponse({'success': False, 'error': 'Invalid form submission.'})
 
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
@@ -80,18 +83,15 @@ def thread_detail(request, thread_id):
 
     if request.method == 'POST':
         if not request.user.is_authenticated:
-            messages.error(request, "You must be logged in to post a message.")
-            return redirect('login')
+            return JsonResponse({'success': False, 'error': 'You must be logged in to post a message.'})
 
         # Prevent posting if the thread is immutable
         if is_immutable:
-            messages.error(request, "This thread is closed and cannot be modified.")
-            return redirect('thread_detail', thread_id=thread.id)
+            return JsonResponse({'success': False, 'error': 'This thread is closed and cannot be modified.'})
 
         # Prevent non-admin users from posting in technical threads
         if thread.is_technical and not request.user.is_staff:
-            messages.error(request, "Only admin users can post messages in technical threads.")
-            return redirect('thread_detail', thread_id=thread.id)
+            return JsonResponse({'success': False, 'error': 'Only admin users can post messages in technical threads.'})
 
         form = MessageForm(request.POST)
         if form.is_valid():
@@ -99,7 +99,19 @@ def thread_detail(request, thread_id):
             message.thread = thread
             message.author = request.user
             message.save()
-            return redirect('thread_detail', thread_id=thread.id)
+
+            # Return success response with message details
+            return JsonResponse({
+                'success': True,
+                'message': {
+                    'id': message.id,
+                    'content': message.content,
+                    'author': message.author.username,
+                    'created_at': message.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                }
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid form submission.'})
     else:
         form = MessageForm()
 
@@ -209,7 +221,6 @@ def create(request):
     return render(request, 'create.html', {'form': form})
 
 def login_view(request):
-    
     storage = messages.get_messages(request)
     for message in storage:
         pass 
@@ -221,10 +232,29 @@ def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
+        remember_me = request.POST.get('remember_me') == 'on'  # Check if "Remember Me" is selected
+
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return JsonResponse({'success': True})
+
+            # Set a "Remember Me" cookie if selected
+            if remember_me:
+                response = JsonResponse({'success': True})
+                response.set_cookie(
+                    'remember_me',
+                    json.dumps({'username': username, 'password': password}),
+                    max_age=30 * 24 * 3600,  # Expires in 30 days
+                    secure=True,  # Only send over HTTPS
+                    httponly=True,  # Prevent JavaScript access
+                    samesite='Lax'  # Prevent CSRF attacks
+                )
+                return response
+            else:
+                # Delete the "Remember Me" cookie if not selected
+                response = JsonResponse({'success': True})
+                response.delete_cookie('remember_me')
+                return response
         else:
             return JsonResponse({'success': False, 'error': 'Invalid username or password.'})
     return render(request, 'login.html')
@@ -269,7 +299,7 @@ def delete_offer(request, req_id):
 
     offer.delete()
     messages.success(request, "Offer deleted successfully.")
-    return redirect('home')
+    return redirect('offermain')
 
 @login_required
 def profile(request):
@@ -302,12 +332,13 @@ def my_offers(request):
         "has_offers": has_offers,  # Pass the flag to the template
     })
 
-@user_passes_test(lambda u: u.is_staff)  # Restrict to admin users
+@user_passes_test(lambda u: u.is_staff)
 def review_offers(request):
     pending_offers = Offer.objects.filter(status='pending')
     return render(request, 'review_offers.html', {'pending_offers': pending_offers})
 
 @user_passes_test(lambda u: u.is_staff)
+@require_POST
 def approve_offer(request, offer_id):
     offer = get_object_or_404(Offer, id=offer_id)
     offer.status = 'approved'
@@ -322,10 +353,10 @@ def approve_offer(request, offer_id):
         fail_silently=False,
     )
 
-    messages.success(request, f'Offer "{offer.title}" has been approved.')
-    return redirect('review_offers')
+    return JsonResponse({'success': True})
 
 @user_passes_test(lambda u: u.is_staff)
+@require_POST
 def reject_offer(request, offer_id):
     offer = get_object_or_404(Offer, id=offer_id)
     offer.status = 'rejected'
@@ -340,10 +371,9 @@ def reject_offer(request, offer_id):
         fail_silently=False,
     )
 
-    messages.error(request, f'Offer "{offer.title}" has been rejected.')
-    return redirect('review_offers')
+    return JsonResponse({'success': True})
 
-@user_passes_test(lambda u: u.is_staff)  # Restrict to admin users
+@user_passes_test(lambda u: u.is_staff) 
 def manage_users(request):
     users = User.objects.all()  # Get all users
     return render(request, 'manage_users.html', {'users': users})
