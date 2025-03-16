@@ -50,5 +50,10 @@ class Message(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
 
+    def is_editable(self):
+        # Check if the message is editable (within 10 minutes of creation)
+        time_elapsed = timezone.now() - self.created_at
+        return time_elapsed.total_seconds() <= 600  # 10 minutes = 600 seconds
+
     def __str__(self):
         return f'Message by {self.author.username} in {self.thread.topic}'

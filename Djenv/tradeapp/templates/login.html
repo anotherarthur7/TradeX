@@ -18,12 +18,14 @@
     <form method="POST">
         {% csrf_token %}
         <div class="form-group">
+            <h2 style="font-size: large;">Username</h2>
             <label for="username">Username</label>
             <input type="text" name="username" id="username" required>
         </div>
         
         <!-- Password Field with Toggle -->
         <div class="form-group">
+            <h2 style="font-size: large;">Password</h2>
             <label for="password">Password</label>
             <div class="password-toggle">
                 <input type="password" name="password" id="password" required>

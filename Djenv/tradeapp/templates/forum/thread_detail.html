@@ -19,9 +19,15 @@
         {% for message in messages %}
             <li>
                 <p>{{ message.content }}</p>
-                <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>  <!-- Fixed: Use message.created_at -->
+                <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>
+                
+                <!-- Edit Button (Visible only to the author and within 10 minutes of creation) -->
+                {% if user == message.author and message.is_editable %}
+                    <a href="{% url 'message_edit' message.id %}" class="button edit-button">Edit</a>
+                {% endif %}
+
+                <!-- Delete Message Button (Visible only to staff users) -->
                 {% if user.is_staff %}
-                    <!-- Delete Message Button -->
                     <form method="post" action="{% url 'message_delete' message.id %}" style="display: inline;">
                         {% csrf_token %}
                         <button type="submit" class="button delete-button" onclick="return confirm('Are you sure you want to delete this message?');">Delete</button>

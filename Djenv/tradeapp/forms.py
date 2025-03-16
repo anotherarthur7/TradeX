@@ -3,7 +3,7 @@ from django.forms import ModelForm
 from .models import Offer
 from .models import models 
 from django.contrib.auth import login, authenticate
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
 from .models import Thread, Message
 from django.core.exceptions import ValidationError
@@ -52,3 +52,14 @@ class OfferForm(forms.ModelForm):
 
         # Return the cleaned price
         return price
+    
+class CustomPasswordChangeForm(PasswordChangeForm):
+    def clean_new_password1(self):
+        old_password = self.cleaned_data.get('old_password')
+        new_password1 = self.cleaned_data.get('new_password1')
+
+        # Check if the new password is the same as the old password
+        if old_password and new_password1 and old_password == new_password1:
+            raise ValidationError("Your new password cannot be the same as your old password.")
+
+        return new_password1

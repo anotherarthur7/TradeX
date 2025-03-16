@@ -11,7 +11,7 @@ from django.contrib import messages
 from .models import Thread, Message
 from .forms import ThreadForm, MessageForm
 from django.utils import timezone
-from django.contrib.auth.forms import PasswordChangeForm
+from .forms import CustomPasswordChangeForm
 
 def is_admin(user):
     return user.is_staff
@@ -46,6 +46,25 @@ def thread_list(request):
         'show_technical': show_technical,
     })
 
+@login_required
+def message_edit(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+
+    # Check if the user is the author and the message is editable
+    if request.user != message.author or not message.is_editable():
+        messages.error(request, "You cannot edit this message.")
+        return redirect('thread_detail', thread_id=message.thread.id)
+
+    if request.method == 'POST':
+        form = MessageForm(request.POST, instance=message)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Message updated successfully.")
+            return redirect('thread_detail', thread_id=message.thread.id)
+    else:
+        form = MessageForm(instance=message)
+
+    return render(request, 'forum/message_edit.html', {'form': form, 'message': message})
 
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
@@ -254,8 +273,8 @@ def delete_offer(request, req_id):
 @login_required
 def profile(request):
     if request.method == 'POST':
-        # Change password
-        password_form = PasswordChangeForm(request.user, request.POST)
+        # Use the custom password change form
+        password_form = CustomPasswordChangeForm(request.user, request.POST)
         if password_form.is_valid():
             user = password_form.save()
             update_session_auth_hash(request, user)  # Keep the user logged in
@@ -264,11 +283,12 @@ def profile(request):
         else:
             messages.error(request, 'Please correct the error below.')
     else:
-        password_form = PasswordChangeForm(request.user)
+        password_form = CustomPasswordChangeForm(request.user)
 
     return render(request, 'profile.html', {
         'password_form': password_form,
     })
+
 
 @login_required
 def my_offers(request):
