@@ -66,6 +66,20 @@
                     <span class="sidebar-text">My Offers</span>
                 </a>
             </div>
+            <div class="sidebar-item">
+                <a href="{% url 'manage_users' %}">
+                    <span role="img" aria-label="Manage Users">👥</span>
+                    <span class="sidebar-text">Manage Users</span>
+                </a>
+            </div>
+        {% endif %}
+        {% if user.is_staff %}
+            <div class="sidebar-item">
+                <a href="{% url 'review_offers' %}">
+                    <span role="img" aria-label="Review Offers">🔍</span>
+                    <span class="sidebar-text">Review Offers</span>
+                </a>
+            </div>
         {% endif %}
     </div>
 

@@ -4,6 +4,7 @@
 <!-- Offer Grid -->
 <div class="offer-grid">
     {% for offer in offers %}
+        {% if offer.status == 'approved' %}
         <div class="offer-item">
             <a href="{% url 'item_index' offer.id %}">
                 <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
@@ -12,6 +13,7 @@
                 </div>
             </a>
         </div>
+        {% endif %}
     {% empty %}
         <p>No offers available.</p>
     {% endfor %}

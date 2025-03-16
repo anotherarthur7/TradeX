@@ -6,6 +6,11 @@ from django.contrib import messages
 
 # Create your views here.
 def register(response):
+    
+    storage = messages.get_messages(response)
+    for message in storage:
+        pass 
+
     if response.user.is_authenticated:
         return redirect('home')
     

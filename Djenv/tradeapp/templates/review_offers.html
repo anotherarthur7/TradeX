@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Review Offers{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Pending Offers</h1>
+    <ul>
+        {% for offer in pending_offers %}
+            <li>
+                <h2>{{ offer.title }}</h2>
+                <p>{{ offer.description }}</p>
+                <p>Price: {{ offer.price }}</p>
+                <p>Posted by: {{ offer.user.username }}</p>
+                <p>Posted on: {{ offer.posted_date }}</p>
+                <a href="{% url 'approve_offer' offer.id %}" class="btn btn-success">Approve</a>
+                <a href="{% url 'reject_offer' offer.id %}" class="btn btn-danger">Reject</a>
+            </li>
+        {% empty %}
+            <p>No pending offers.</p>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

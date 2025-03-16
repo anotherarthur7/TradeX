@@ -5,6 +5,18 @@
 {% block content %}
 <div class="form-container">
     <h1>Create an Account</h1>
+
+    <!-- Display error messages -->
+    {% if messages %}
+        {% for message in messages %}
+            {% if message.tags == 'error' %}  <!-- Only display error messages -->
+                <div class="alert alert-danger">
+                    {{ message }}
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% endif %}
+
     <form method="POST" class="form-group register-form">
         {% csrf_token %}
         <div class="form-fields">
