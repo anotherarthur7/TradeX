@@ -6,6 +6,7 @@ from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from .models import Thread, Message
+from django.core.exceptions import ValidationError
 
 class ThreadForm(forms.ModelForm):
     class Meta:
@@ -17,7 +18,7 @@ class MessageForm(forms.ModelForm):
         model = Message
         fields = ['content']
 
-class OfferForm(ModelForm):
+class OfferForm(forms.ModelForm):
     title = forms.CharField(
         label="Offer Title",
         widget=forms.TextInput(attrs={'class': 'custom-form-control', 'placeholder': 'Enter title'})
@@ -40,3 +41,14 @@ class OfferForm(ModelForm):
     class Meta:
         model = Offer
         fields = ['title', 'description', 'price', 'image']
+
+    def clean_price(self):
+        # Get the price value from the form data
+        price = self.cleaned_data.get('price')
+
+        # Check if the price is negative
+        if price is not None and price < 0:
+            raise ValidationError("Price cannot be negative. Please enter a valid price.")
+
+        # Return the cleaned price
+        return price

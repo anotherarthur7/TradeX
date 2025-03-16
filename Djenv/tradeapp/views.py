@@ -64,8 +64,8 @@ def thread_detail(request, thread_id):
             messages.error(request, "This thread is closed and cannot be modified.")
             return redirect('thread_detail', thread_id=thread.id)
 
-        # Restrict posting to admin users only
-        if not request.user.is_staff:
+        # Prevent non-admin users from posting in technical threads
+        if thread.is_technical and not request.user.is_staff:
             messages.error(request, "Only admin users can post messages in technical threads.")
             return redirect('thread_detail', thread_id=thread.id)
 
@@ -120,21 +120,19 @@ def thread_delete(request, thread_id):
     return redirect('thread_detail', thread_id=thread.id)
 
 @login_required
-def message_edit(request, message_id):
+def message_delete(request, message_id):
+    # Get the message or return a 404 error
     message = get_object_or_404(Message, id=message_id)
-    if request.user != message.author and not request.user.is_staff and request.user :
-        return redirect('thread_detail', thread_id=message.thread.id)
-    if request.method == 'POST':
-        if 'delete' in request.POST:
-            message.delete()
-        else:
-            form = MessageForm(request.POST, instance=message)
-            if form.is_valid():
-                form.save()
-        return redirect('thread_detail', thread_id=message.thread.id)
-    else:
-        form = MessageForm(instance=message)
-    return render(request, 'forum/message_edit.html', {'form': form, 'message': message})
+
+    # Ensure only admin users can delete messages
+    if not request.user.is_staff:
+        return redirect('forum/thread_detail', thread_id=message.thread.id)
+
+    # Delete the message
+    message.delete()
+
+    # Redirect back to the thread detail page
+    return redirect('forum/thread_detail', thread_id=message.thread.id)
 
 def home(request):
     return render(request, 'home.html', {'is_home': True})
@@ -202,6 +200,8 @@ def login_view(request):
         else:
             print("Authentication failed for username:", username)
             messages.error(request, 'Invalid username or password.')
+            # Render the login page with the error message and retain form data
+            return render(request, 'login.html', {'username': username})
     else:
         print("GET request received")
         return render(request, 'login.html')

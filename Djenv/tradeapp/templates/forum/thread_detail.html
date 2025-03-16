@@ -19,26 +19,32 @@
         {% for message in messages %}
             <li>
                 <p>{{ message.content }}</p>
-                <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>
+                <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>  <!-- Fixed: Use message.created_at -->
                 {% if user.is_staff %}
-                    <a href="{% url 'message_edit' message.id %}" class="button edit-button">Edit</a>
+                    <!-- Delete Message Button -->
+                    <form method="post" action="{% url 'message_delete' message.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="button delete-button" onclick="return confirm('Are you sure you want to delete this message?');">Delete</button>
+                    </form>
                 {% endif %}
             </li>
         {% endfor %}
     </ul>
 </div>
 
-<!-- Add Message Form (Visible only to logged-in admin users and open threads) -->
-{% if user.is_authenticated and user.is_staff and not is_immutable %}
-<div class="form-container">
-    <h2 class="form-title" style="text-align: center;">Add a message:</h2>
-    <form method="post" id="message-form">
-        {% csrf_token %}
-        {{ form.content.label_tag }}
-        {{ form.content }}
-        <button type="submit" class="button post-button">Post</button>
-    </form>
-</div>
+<!-- Add Message Form (Visible to logged-in users in open, non-technical threads, or admins in any open thread) -->
+{% if user.is_authenticated and not is_immutable %}
+    {% if not thread.is_technical or user.is_staff %}
+    <div class="form-container">
+        <h2 class="form-title" style="text-align: center;">Add a message:</h2>
+        <form method="post" id="message-form">
+            {% csrf_token %}
+            {{ form.content.label_tag }}
+            {{ form.content }}
+            <button type="submit" class="button post-button">Post</button>
+        </form>
+    </div>
+    {% endif %}
 {% endif %}
 
 <!-- Delete Thread Button (Visible only to staff users) -->

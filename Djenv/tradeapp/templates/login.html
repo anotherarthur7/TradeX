@@ -5,6 +5,16 @@
 {% block content %}
 <div class="form-container">
     <h1>Login</h1>
+
+    <!-- Display error messages -->
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-danger">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
     <form method="POST">
         {% csrf_token %}
         <div class="form-group">
@@ -79,6 +89,20 @@
 
     .password-toggle .toggle-password:hover {
         opacity: 0.8;
+    }
+
+    /* Error Message Styling */
+    .alert {
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+    }
+
+    .alert-danger {
+        color: #721c24;
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
     }
 </style>
 {% endblock %}
