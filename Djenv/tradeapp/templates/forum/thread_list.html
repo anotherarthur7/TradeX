@@ -1,39 +1,102 @@
 {% extends "base.html" %}
 {% block content %}
 
-
-
 <!-- Thread List -->
 <div class="forum-container">
+    <!-- Tabs for Open, Closed, and Technical Threads -->
+    <div class="tabs">
+        <a href="?show_technical=true&show_closed=false" class="tab {% if show_technical %}active{% endif %}">Technical Threads</a>
+        <a href="?show_technical=false&show_closed=false" class="tab {% if not show_technical and not show_closed %}active{% endif %}">Open Threads</a>
+        <a href="?show_technical=false&show_closed=true" class="tab {% if show_closed and not show_technical %}active{% endif %}">Closed Threads</a>
+    </div>
+
+    <!-- Displayed Threads -->
     <ul class="thread-list">
-        {% for thread in threads %}
-            <li class="thread-item {% if not thread.offer.is_open %}closed-thread{% endif %}">
-                <a href="{% url 'thread_detail' thread.id %}">
-                    <h2>{{ thread.topic }}</h2>
-                    <p>By {{ thread.author.username }} on {{ thread.created_at }}</p>
-                    {% if not thread.offer.is_open %}
-                        <span class="closed-label">Closed</span>
-                    {% endif %}
-                </a>
-            </li>
+        {% for thread in displayed_threads %}
+        <li class="thread-item {% if thread.offer and not thread.offer.is_open %}closed-thread{% endif %}">
+            <a href="{% url 'thread_detail' thread.id %}">
+                <h2>{{ thread.topic }}</h2>
+                <p>By {{ thread.author.username }} on {{ thread.created_at }}</p>
+                {% if thread.offer and not thread.offer.is_open %}
+                    <span class="closed-label">Closed</span>
+                {% endif %}
+            </a>
+        </li>
         {% empty %}
-            <p>No threads available.</p>
+        <p>No threads available.</p>
         {% endfor %}
     </ul>
 </div>
 
 <!-- Create Thread Button (Visible only to staff users) -->
 {% if user.is_staff %}
-<div class="button-container">
+<div class="create-thread-button">
     <a href="{% url 'thread_create' %}" class="button">Create New Thread</a>
 </div>
 {% endif %}
-<!-- Switch Button at the Bottom -->
-<div class="switch-container bottom-switch">
-    <a href="?show_closed=false" class="btn {% if not show_closed %}active{% endif %}">Show Open Threads</a>
-    <a href="?show_closed=true" class="btn {% if show_closed %}active{% endif %}">Show Closed Threads</a>
-</div>
-<style>
 
+<style>
+    /* Tabs Styling */
+    .tabs {
+        display: flex;
+        margin-bottom: 20px;
+    }
+
+    .tab {
+        padding: 10px 20px;
+        margin-right: 10px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        text-decoration: none;
+        color: #333;
+        background-color: #f8f9fa;
+    }
+
+    .tab.active {
+        background-color: #007bff;
+        color: white;
+        border-color: #007bff;
+    }
+
+    /* Create Thread Button Styling */
+    .create-thread-button {
+        position: fixed;
+        bottom: 50px; /* Position at the bottom of the page */
+        left: 6px; /* Adjust this value to position it after the sidebar */
+        z-index: 1000; /* Ensure it stays above other elements */
+    }
+
+    .create-thread-button .button {
+        padding: 10px 20px;
+        background-color: #007bff;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+    }
+
+    .create-thread-button .button:hover {
+        background-color: #0056b3;
+    }
+
+    /* Forum Container Styling */
+    .forum-container {
+        margin-bottom: 80px; /* Add margin to avoid overlap with the buttons at the bottom */
+    }
 </style>
+
+<script>
+    // Show/hide technical threads when the "Technical Threads" tab is clicked
+    document.addEventListener('DOMContentLoaded', function () {
+        const technicalTab = document.querySelector('.tab[href="?show_technical=true"]');
+        const technicalThreads = document.getElementById('technical-threads');
+
+        if (technicalTab && technicalThreads) {
+            technicalTab.addEventListener('click', function (event) {
+                event.preventDefault();
+                technicalThreads.style.display = 'block';
+                document.querySelector('.thread-list').style.display = 'none';
+            });
+        }
+    });
+</script>
 {% endblock %}

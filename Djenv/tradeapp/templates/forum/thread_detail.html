@@ -5,7 +5,7 @@
 <p class="thread-meta">By {{ thread.author.username }} on {{ thread.created_at }}</p>
 
 <!-- Closed Thread Indicator -->
-{% if not thread.offer.is_open %}
+{% if thread.offer and not thread.offer.is_open %}
     <div class="closed-indicator">
         <span class="closed-label" style="text-align: center;">This thread is closed.</span>
     </div>
@@ -20,7 +20,7 @@
             <li>
                 <p>{{ message.content }}</p>
                 <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>
-                {% if user == message.author or user.is_staff %}
+                {% if user.is_staff %}
                     <a href="{% url 'message_edit' message.id %}" class="button edit-button">Edit</a>
                 {% endif %}
             </li>
@@ -28,8 +28,8 @@
     </ul>
 </div>
 
-<!-- Add Message Form (Visible only to logged-in users and open threads) -->
-{% if user.is_authenticated and thread.offer.is_open %}
+<!-- Add Message Form (Visible only to logged-in admin users and open threads) -->
+{% if user.is_authenticated and user.is_staff and not is_immutable %}
 <div class="form-container">
     <h2 class="form-title" style="text-align: center;">Add a message:</h2>
     <form method="post" id="message-form">
