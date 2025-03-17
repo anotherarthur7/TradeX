@@ -122,7 +122,7 @@ def thread_detail(request, thread_id):
         'is_immutable': is_immutable,
     })
 
-@staff_member_required
+
 @login_required
 def thread_create(request):
     if request.method == 'POST':
@@ -131,11 +131,11 @@ def thread_create(request):
             thread = form.save(commit=False)
             thread.author = request.user
 
-            # Ensure the offer is either open or null
-            if thread.offer and not thread.offer.is_open:
-                messages.error(request, "You cannot attach a thread to a closed offer.")
+            # Ensure the offer is approved
+            if thread.offer and thread.offer.status != 'approved':
+                messages.error(request, "You cannot attach a thread to a non-approved offer.")
             else:
-                # Save the thread if the offer is open or null
+                # Save the thread if the offer is approved
                 thread.save()
                 messages.success(request, "Thread created successfully!")
                 return redirect('thread_list')
@@ -212,10 +212,14 @@ def create(request):
         if form.is_valid():
             offer = form.save(commit=False)
             offer.user = request.user
-            offer.status = 'pending' 
+            offer.status = 'pending'
             offer.save()
             messages.success(request, 'Your offer has been submitted and is pending approval.')
-            return redirect('home')
+            return JsonResponse({'success': True})
+        else:
+            # Return form errors as JSON
+            errors = {field: error.get_json_data() for field, error in form.errors.items()}
+            return JsonResponse({'success': False, 'errors': errors}, status=400)
     else:
         form = OfferForm()
     return render(request, 'create.html', {'form': form})
@@ -337,17 +341,18 @@ def review_offers(request):
     pending_offers = Offer.objects.filter(status='pending')
     return render(request, 'review_offers.html', {'pending_offers': pending_offers})
 
-@user_passes_test(lambda u: u.is_staff)
+@staff_member_required
 @require_POST
 def approve_offer(request, offer_id):
     offer = get_object_or_404(Offer, id=offer_id)
     offer.status = 'approved'
+    offer.is_open = True  # Mark the offer as open
     offer.save()
 
     # Notify the user via email
     send_mail(
         'Offer Approved',
-        f'Your offer "{offer.title}" has been approved.',
+        f'Your offer "{offer.title}" has been approved. A discussion thread has been created.',
         settings.DEFAULT_FROM_EMAIL,
         [offer.user.email],
         fail_silently=False,
@@ -359,7 +364,8 @@ def approve_offer(request, offer_id):
 @require_POST
 def reject_offer(request, offer_id):
     offer = get_object_or_404(Offer, id=offer_id)
-    offer.status = 'rejected'
+    offer.status = 'rejected'  # Set status to 'rejected'
+    offer.is_open = False  # Mark the offer as closed
     offer.save()
 
     # Notify the user via email

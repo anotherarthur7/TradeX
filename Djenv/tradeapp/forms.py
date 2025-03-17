@@ -11,8 +11,13 @@ from django.core.exceptions import ValidationError
 class ThreadForm(forms.ModelForm):
     class Meta:
         model = Thread
-        fields = ['topic', 'offer']
+        fields = ['topic', 'offer', 'is_technical']
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Filter offers to only show approved ones
+        self.fields['offer'].queryset = Offer.objects.filter(status='approved')
+        
 class MessageForm(forms.ModelForm):
     class Meta:
         model = Message

@@ -4,11 +4,8 @@ from django.dispatch import receiver
 from .models import Offer, Thread
 
 @receiver(post_save, sender=Offer)
-def create_thread_for_offer(sender, instance, created, **kwargs):
-    """
-    Automatically create a thread when a new offer is posted.
-    """
-    if created:  # Only create a thread for new offers
+def create_thread_for_offer(sender, instance, **kwargs):
+    if instance.status == 'approved':  # Only create a thread for approved offers
         Thread.objects.create(
             topic=instance.title,  # Use the offer's title as the thread topic
             author=instance.user,  # Set the thread author to the offer's creator

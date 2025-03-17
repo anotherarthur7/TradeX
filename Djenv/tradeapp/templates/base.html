@@ -62,12 +62,14 @@
                     <span class="sidebar-text">Edit Profile</span>
                 </a>
             </div>
+        {% endif %}
             <div class="sidebar-item">
                 <a href="{% url 'my_offers' %}">
                     <span role="img" aria-label="My Offers">📄</span>
                     <span class="sidebar-text">My Offers</span>
                 </a>
             </div>
+        {% if user.is_staff %}
             <div class="sidebar-item">
                 <a href="{% url 'manage_users' %}">
                     <span role="img" aria-label="Manage Users">👥</span>

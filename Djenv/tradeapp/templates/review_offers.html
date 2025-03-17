@@ -29,6 +29,13 @@
 <!-- JavaScript for AJAX Requests -->
 <script>
     $(document).ready(function () {
+        // Function to check if there are any pending offers left
+        function checkPendingOffers() {
+            if ($('#pending-offers-list li').length === 0) {
+                $('#pending-offers-list').html('<p>No pending offers.</p>');
+            }
+        }
+
         // Approve Offer
         $('.approve-btn').on('click', function () {
             var offerId = $(this).data('offer-id');
@@ -60,6 +67,8 @@
                         setTimeout(function () {
                             $('#offer-' + offerId).fadeOut(500, function () {
                                 $(this).remove();
+                                // Check if there are any pending offers left
+                                checkPendingOffers();
                             });
                         }, 1000);
                     } else {
@@ -97,6 +106,8 @@
                         setTimeout(function () {
                             $('#offer-' + offerId).fadeOut(500, function () {
                                 $(this).remove();
+                                // Check if there are any pending offers left
+                                checkPendingOffers();
                             });
                         }, 1000);
                     } else {

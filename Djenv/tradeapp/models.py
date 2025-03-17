@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 # Create your models here.
 
 
@@ -46,8 +47,15 @@ class Thread(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     offer = models.ForeignKey(Offer, on_delete=models.CASCADE, related_name='threads', null=True, blank=True)
     is_technical = models.BooleanField(default=False)
+
     def __str__(self):
         return self.topic
+
+    def save(self, *args, **kwargs):
+        # Ensure that a thread cannot be manually created for a non-approved offer
+        if self.offer and self.offer.status != 'approved':
+            raise ValidationError("A thread can only be created for an approved offer.")
+        super().save(*args, **kwargs)
 
 class Message(models.Model):
     thread = models.ForeignKey(Thread, on_delete=models.CASCADE, related_name='messages')
