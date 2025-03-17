@@ -12,6 +12,10 @@
                     <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
                     <div class="offer-overlay">
                         <div class="offer-title">{{ offer.title }}</div>
+                        <!-- Updated offer-status block with data-status attribute -->
+                        <div class="offer-status" data-status="{{ offer.status }}">
+                            Status: {{ offer.get_status_display }}
+                        </div>
                     </div>
                 </a>
             </div>
@@ -29,6 +33,10 @@
                     <img src="{{ offer.image.url }}" alt="{{ offer.title }}" class="offer-image">
                     <div class="offer-overlay">
                         <div class="offer-title">{{ offer.title }}</div>
+                        <!-- Updated offer-status block with data-status attribute -->
+                        <div class="offer-status" data-status="{{ offer.status }}">
+                            Status: {{ offer.get_status_display }}
+                        </div>
                     </div>
                 </a>
             </div>
@@ -45,7 +53,7 @@
 {% endif %}
 
 <style>
-        /* No Offers Container */
+    /* No Offers Container */
     .no-offers-container {
         text-align: center; /* Center the content */
         margin-top: 50px; /* Add some space at the top */
@@ -64,6 +72,7 @@
         color: #c5c5c5; /* Gray text color */
         margin-top: 20px; /* Add space between the GIF and text */
     }
+
     .offer-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -103,6 +112,23 @@
     .offer-title {
         font-size: 1.2em;
         text-align: center;
+    }
+
+    .offer-status {
+        font-size: 0.9em;
+        margin-top: 5px;
+    }
+
+    .offer-status[data-status="rejected"] {
+        color: #ff4d4d; /* Red for rejected offers */
+    }
+
+    .offer-status[data-status="approved"] {
+        color: #4dff4d; /* Green for approved offers */
+    }
+
+    .offer-status[data-status="pending"] {
+        color: #ffcc00; /* Yellow for pending offers */
     }
 
     .offer-item:hover .offer-image {

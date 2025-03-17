@@ -5,7 +5,7 @@
 {% block content %}
 <div class="form-container">
     <h1>Your offer specifications:</h1>
-    <form method="POST" action="{% url 'create' %}" enctype="multipart/form-data">
+    <form method="POST" action="{% url 'create' %}" enctype="multipart/form-data" id="offer-form">
         {% csrf_token %}
 
         <div class="form-group">
@@ -44,19 +44,72 @@
             <button type="submit" name="save" class="custom-button">Create new</button>
         </div>
     </form>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const fileInput = document.querySelector('.custom-file-input input[type="file"]');
-            const fileInputText = document.querySelector('.file-input-text');
-    
-            fileInput.addEventListener("change", function () {
-                if (fileInput.files.length > 0) {
-                    fileInputText.textContent = fileInput.files[0].name;
-                } else {
-                    fileInputText.textContent = "Provide your image";
+</div>
+
+<!-- Include SweetAlert2 Library -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.querySelector('.custom-file-input input[type="file"]');
+        const fileInputText = document.querySelector('.file-input-text');
+
+        fileInput.addEventListener("change", function () {
+            if (fileInput.files.length > 0) {
+                fileInputText.textContent = fileInput.files[0].name;
+            } else {
+                fileInputText.textContent = "Provide your image";
+            }
+        });
+
+        // Check if the form was submitted successfully
+        const form = document.getElementById('offer-form');
+        form.addEventListener('submit', function (event) {
+            event.preventDefault(); // Prevent default form submission
+
+            // Submit the form via AJAX
+            const formData = new FormData(form);
+
+            fetch('{% url 'create' %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
                 }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show SweetAlert pop-up
+                    Swal.fire({
+                        title: 'Offer Submitted!',
+                        text: 'Your offer is pending now until admin checks it.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Redirect to home page after the user clicks "OK"
+                        window.location.href = '{% url 'home' %}';
+                    });
+                } else {
+                    // Handle form errors
+                    Swal.fire({
+                        title: 'Error!',
+                        text: 'There was an error submitting your offer. Please try again.',
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An unexpected error occurred. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
             });
         });
-    </script>
-</div>
+    });
+</script>
 {% endblock %}
