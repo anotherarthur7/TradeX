@@ -4,12 +4,12 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import HttpResponseRedirect
 from .models import Offer
 from django.http import JsonResponse
-from .forms import OfferForm
+from .forms import OfferForm, ReportForm
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
-from .models import Thread, Message
+from .models import Thread, Message, Report
 from .forms import ThreadForm, MessageForm
 from django.utils import timezone
 from .forms import CustomPasswordChangeForm
@@ -52,9 +52,46 @@ def thread_list(request):
         'show_technical': show_technical,
     })
 
+@login_required
+def message_create(request, thread_id):
+    thread = get_object_or_404(Thread, id=thread_id)
+
+    # Check if the user is allowed to post messages
+    if not request.user.profile.can_post_messages:
+        return JsonResponse({'success': False, 'error': 'You are not allowed to post messages.'})
+
+    # Check if the thread is closed
+    if thread.offer and not thread.offer.is_open:
+        return JsonResponse({'success': False, 'error': 'This thread is closed and cannot be posted to.'})
+
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.thread = thread
+            message.author = request.user
+            message.save()
+            return JsonResponse({
+                'success': True,
+                'message': {
+                    'id': message.id,
+                    'content': message.content,
+                    'author': message.author.username,
+                    'created_at': message.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                }
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Invalid form submission.'})
+    else:
+        return JsonResponse({'success': False, 'error': 'Invalid request method.'})
+
 @require_POST
 def message_edit(request, message_id):
     message = get_object_or_404(Message, id=message_id)
+
+    # Check if the user is allowed to post messages
+    if not request.user.profile.can_post_messages:
+        return JsonResponse({'success': False, 'error': 'You are not allowed to edit messages.'})
 
     # Check if the user is the author and the message is editable
     if request.user != message.author or not message.is_editable():
@@ -122,7 +159,6 @@ def thread_detail(request, thread_id):
         'is_immutable': is_immutable,
     })
 
-
 @login_required
 def thread_create(request):
     if request.method == 'POST':
@@ -183,7 +219,6 @@ def offermain(request):
     else:
         offers = Offer.objects.filter(is_open=True)
     return render(request, "offermain.html", {"offers": offers, "show_closed": show_closed})
-
 
 def itemIndex(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
@@ -284,8 +319,12 @@ def edit_offer(request, req_id):
     if request.method == 'POST':
         form = OfferForm(request.POST, request.FILES, instance=offer)
         if form.is_valid():
+            # Save the form data
             form.save()
-            messages.success(request, "Offer updated successfully.")
+            # Set the status to 'pending' after editing
+            offer.status = 'pending'
+            offer.save()
+            messages.success(request, "Offer updated successfully and is now pending approval.")
             return redirect('item_index', req_id=req_id)
     else:
         form = OfferForm(instance=offer)
@@ -379,10 +418,19 @@ def reject_offer(request, offer_id):
 
     return JsonResponse({'success': True})
 
-@user_passes_test(lambda u: u.is_staff) 
+@user_passes_test(lambda u: u.is_staff)
 def manage_users(request):
     users = User.objects.all()  # Get all users
     return render(request, 'manage_users.html', {'users': users})
+
+@user_passes_test(lambda u: u.is_staff)
+def toggle_user_post_permission(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    user_profile = user.profile
+    user_profile.can_post_messages = not user_profile.can_post_messages  # Toggle the permission
+    user_profile.save()
+    messages.success(request, f"{user.username}'s message posting permission has been updated.")
+    return redirect('manage_users')
 
 @user_passes_test(lambda u: u.is_staff)
 def edit_user(request, user_id):
@@ -404,3 +452,52 @@ def delete_user(request, user_id):
         messages.success(request, f'User "{user.username}" deleted successfully.')
         return redirect('manage_users')
     return render(request, 'confirm_delete_user.html', {'user': user})
+
+@login_required
+def report_message(request, message_id):
+    message = get_object_or_404(Message, id=message_id)
+    if request.method == 'POST':
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            report.reported_message = message
+            report.reporter = request.user
+            report.save()
+            return redirect('thread_detail', thread_id=message.thread.id)  # Redirect to the thread detail page
+    else:
+        form = ReportForm()
+    return render(request, 'report_message.html', {'form': form, 'message': message})
+
+@staff_member_required
+def view_reports(request):
+    reports = Report.objects.filter(status='pending')  # Show only pending reports
+    return render(request, 'view_reports.html', {'reports': reports})
+
+@staff_member_required
+def resolve_report(request, report_id):
+    report = get_object_or_404(Report, id=report_id)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'restrict':
+            # Restrict the reported message
+            report.reported_message.is_restricted = True
+            report.reported_message.save()
+            # Restrict the user from posting further messages
+            user_profile = report.reported_message.author.profile
+            user_profile.can_post_messages = False
+            user_profile.save()
+            messages.success(request, f"{report.reported_message.author.username} has been restricted from posting messages.")
+        elif action == 'notify':
+            # Send a notification to the message author
+            send_mail(
+                'Message Reported',
+                f'Your message in the thread "{report.reported_message.thread.topic}" has been reported. Please review our community guidelines.',
+                settings.DEFAULT_FROM_EMAIL,
+                [report.reported_message.author.email],
+                fail_silently=False,
+            )
+            messages.success(request, f"A notification has been sent to {report.reported_message.author.username}.")
+        report.status = 'resolved'
+        report.save()
+        return redirect('view_reports')
+    return render(request, 'resolve_report.html', {'report': report})

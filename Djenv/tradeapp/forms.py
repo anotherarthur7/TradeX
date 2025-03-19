@@ -5,7 +5,7 @@ from .models import models
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.forms import PasswordChangeForm
 from django.contrib.auth.models import User
-from .models import Thread, Message
+from .models import Thread, Message, Report
 from django.core.exceptions import ValidationError
 
 class ThreadForm(forms.ModelForm):
@@ -68,3 +68,12 @@ class CustomPasswordChangeForm(PasswordChangeForm):
             raise ValidationError("Your new password cannot be the same as your old password.")
 
         return new_password1
+    
+class ReportForm(forms.ModelForm):
+    class Meta:
+        model = Report
+        fields = ['reason', 'message']
+        widgets = {
+            'reason': forms.Select(attrs={'class': 'form-control'}),
+            'message': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }

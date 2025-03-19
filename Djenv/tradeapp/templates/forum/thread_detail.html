@@ -20,7 +20,7 @@
             <li id="message-{{ message.id }}">
                 <p id="message-content-{{ message.id }}">{{ message.content }}</p>
                 <p class="message-meta">By {{ message.author.username }} on {{ message.created_at }}</p>
-                
+                <a href="{% url 'report_message' message.id %}" class="btn btn-danger btn-sm">⚠</a>
                 <!-- Edit Button (Visible only to the author and within 10 minutes of creation) -->
                 {% if user == message.author and message.is_editable %}
                     <button class="button edit-button" data-message-id="{{ message.id }}">Edit</button>
@@ -82,7 +82,7 @@
             // Send AJAX request
             $.ajax({
                 type: 'POST',
-                url: '{% url "thread_detail" thread.id %}',
+                url: '{% url "message_create" thread.id %}',
                 data: formData,
                 success: function (response) {
                     if (response.success) {
@@ -91,9 +91,18 @@
                             <li id="message-${response.message.id}">
                                 <p id="message-content-${response.message.id}">${response.message.content}</p>
                                 <p class="message-meta">By ${response.message.author} on ${response.message.created_at}</p>
-                                <button class="button edit-button" data-message-id="${response.message.id}">Edit</button>
+                                <a href="{% url 'report_message' 0 %}" class="btn btn-danger btn-sm">⚠</a>
+                                {% if user == message.author and message.is_editable %}
+                                    <button class="button edit-button" data-message-id="${response.message.id}">Edit</button>
+                                {% endif %}
+                                {% if user.is_staff %}
+                                    <form method="post" action="{% url 'message_delete' 0 %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="button delete-button" onclick="return confirm('Are you sure you want to delete this message?');">Delete</button>
+                                    </form>
+                                {% endif %}
                             </li>
-                        `;
+                        `.replace(/0/g, response.message.id);
                         $('#message-list').append(newMessage);
 
                         // Clear the form

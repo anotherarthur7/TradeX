@@ -85,6 +85,14 @@
                 </a>
             </div>
         {% endif %}
+        {% if user.is_staff %}
+        <div class="sidebar-item">
+            <a href="{% url 'view_reports' %}">
+                <span role="img" aria-label="View Reports">🚩</span>
+                <span class="sidebar-text">View Reports</span>
+            </a>
+        </div>
+    {% endif %}
     </div>
 
     <!-- Main Content -->
