@@ -18,6 +18,7 @@ from django.conf import settings
 import json
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
+from django.core.exceptions import ValidationError
 
 def is_admin(user):
     return user.is_staff
@@ -71,6 +72,7 @@ def message_create(request, thread_id):
             message.thread = thread
             message.author = request.user
             message.save()
+            is_editable = message.is_editable()
             return JsonResponse({
                 'success': True,
                 'message': {
@@ -78,7 +80,8 @@ def message_create(request, thread_id):
                     'content': message.content,
                     'author': message.author.username,
                     'created_at': message.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                }
+                },
+                'is_editable': is_editable,
             })
         else:
             return JsonResponse({'success': False, 'error': 'Invalid form submission.'})
@@ -387,6 +390,18 @@ def approve_offer(request, offer_id):
     offer.status = 'approved'
     offer.is_open = True  # Mark the offer as open
     offer.save()
+
+        # Create a new thread for the approved offer
+    try:
+        thread = Thread(
+            topic=f"{offer.title}",
+            author=offer.user,
+            offer=offer
+        )
+        thread.save()
+    except ValidationError as e:
+        # Handle the case where the thread cannot be created
+        return JsonResponse({'success': False, 'error': str(e)})
 
     # Notify the user via email
     send_mail(

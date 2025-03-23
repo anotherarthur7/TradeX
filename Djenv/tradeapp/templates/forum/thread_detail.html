@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+
 {% block content %}
 <!-- Thread Title -->
 <h1 class="thread-title">{{ thread.topic }}</h1>
@@ -69,143 +70,148 @@
 <!-- Include SweetAlert2 -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-<!-- JavaScript for AJAX Message Posting and Editing -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.5/purify.min.js"></script>
 <script>
-    $(document).ready(function () {
-        // Handle form submission
-        $('#message-form').on('submit', function (e) {
-            e.preventDefault();  // Prevent the default form submission
+<!-- JavaScript for AJAX Message Posting and Editing -->
+$(document).ready(function () {
+    // Handle form submission
+    $('#message-form').on('submit', function (e) {
+        e.preventDefault();  // Prevent the default form submission
 
-            // Serialize form data
-            var formData = $(this).serialize();
+        // Serialize form data
+        var formData = $(this).serialize();
 
-            // Send AJAX request
-            $.ajax({
-                type: 'POST',
-                url: '{% url "message_create" thread.id %}',
-                data: formData,
-                success: function (response) {
-                    if (response.success) {
-                        // Append the new message to the list
-                        var newMessage = `
-                            <li id="message-${response.message.id}">
-                                <p id="message-content-${response.message.id}">${response.message.content}</p>
-                                <p class="message-meta">By ${response.message.author} on ${response.message.created_at}</p>
-                                <a href="{% url 'report_message' 0 %}" class="btn btn-danger btn-sm">⚠</a>
-                                {% if user == message.author and message.is_editable %}
-                                    <button class="button edit-button" data-message-id="${response.message.id}">Edit</button>
-                                {% endif %}
-                                {% if user.is_staff %}
-                                    <form method="post" action="{% url 'message_delete' 0 %}" style="display: inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="button delete-button" onclick="return confirm('Are you sure you want to delete this message?');">Delete</button>
-                                    </form>
-                                {% endif %}
-                            </li>
-                        `.replace(/0/g, response.message.id);
-                        $('#message-list').append(newMessage);
+        // Send AJAX request
+        $.ajax({
+            type: 'POST',
+            url: '{% url "message_create" thread.id %}',
+            data: formData,
+            success: function (response) {
+                if (response.success) {
+                    // Sanitize the message content using DOMPurify
+                    var sanitizedContent = DOMPurify.sanitize(response.message.content);
 
-                        // Clear the form
-                        $('#message-form')[0].reset();
+                    // Append the new message to the list
+                    var newMessage = `
+                        <li id="message-${response.message.id}">
+                            <p id="message-content-${response.message.id}">${sanitizedContent}</p>
+                            <p class="message-meta">By ${response.message.author} on ${response.message.created_at}</p>
+                            <a href="{% url 'report_message' 0 %}" class="btn btn-danger btn-sm">⚠</a>
+                            ${response.is_editable ? `<button class="button edit-button" data-message-id="${response.message.id}">Edit</button>` : ''}
+                            {% if user.is_staff %}
+                                <form method="post" action="{% url 'message_delete' 0 %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="button delete-button" onclick="return confirm('Are you sure you want to delete this message?');">Delete</button>
+                                </form>
+                            {% endif %}
+                        </li>
+                    `.replace(/0/g, response.message.id);
+                    $('#message-list').append(newMessage);
 
-                        // Show success message
-                        Swal.fire({
-                            title: "Success",
-                            text: "Message posted successfully.",
-                            icon: "success",
-                            confirmButtonText: "OK",
-                        });
-                    } else {
-                        // Show error message
-                        Swal.fire({
-                            title: "Error",
-                            text: response.error,
-                            icon: "error",
-                            confirmButtonText: "OK",
-                        });
-                    }
-                },
-                error: function (xhr, status, error) {
+                    // Clear the form
+                    $('#message-form')[0].reset();
+
+                    // Show success message
+                    Swal.fire({
+                        title: "Success",
+                        text: "Message posted successfully.",
+                        icon: "success",
+                        confirmButtonText: "OK",
+                    });
+                } else {
                     // Show error message
                     Swal.fire({
                         title: "Error",
-                        text: "An error occurred. Please try again.",
+                        text: response.error,
                         icon: "error",
                         confirmButtonText: "OK",
                     });
                 }
-            });
+            },
+            error: function (xhr, status, error) {
+                // Show error message
+                Swal.fire({
+                    title: "Error",
+                    text: "An error occurred. Please try again.",
+                    icon: "error",
+                    confirmButtonText: "OK",
+                });
+            }
+        });
+    });
+
+    // Handle edit button click
+    $(document).on('click', '.edit-button', function () {
+        var messageId = $(this).data('message-id');
+        var messageContent = $('#message-content-' + messageId).text();
+
+        $.ajaxSetup({
+            headers: {
+                'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+            }
         });
 
-        // Handle edit button click
-        $(document).on('click', '.edit-button', function () {
-            var messageId = $(this).data('message-id');
-            var messageContent = $('#message-content-' + messageId).text();
-
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRFToken': $('meta[name="csrf-token"]').attr('content')
+        // Show an edit dialog
+        Swal.fire({
+            title: "Edit Message",
+            input: "textarea",
+            inputValue: messageContent,
+            showCancelButton: true,
+            confirmButtonText: "Save",
+            cancelButtonText: "Cancel",
+            inputValidator: (value) => {
+                if (!value) {
+                    return "Message content cannot be empty.";
                 }
-            });
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Sanitize the updated content
+                var sanitizedContent = DOMPurify.sanitize(result.value);
 
-            // Show an edit dialog
-            Swal.fire({
-                title: "Edit Message",
-                input: "textarea",
-                inputValue: messageContent,
-                showCancelButton: true,
-                confirmButtonText: "Save",
-                cancelButtonText: "Cancel",
-                inputValidator: (value) => {
-                    if (!value) {
-                        return "Message content cannot be empty.";
-                    }
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Send AJAX request to update the message
-                    $.ajax({
-                        type: 'POST',
-                        url: '{% url "message_edit" 0 %}'.replace('0', messageId),
-                        data: {
-                            content: result.value,
-                            csrfmiddlewaretoken: '{{ csrf_token }}'
-                        },
-                        success: function (response) {
-                            if (response.success) {
-                                // Update the message content
-                                $('#message-content-' + messageId).text(response.message.content);
+                // Send AJAX request to update the message
+                $.ajax({
+                    type: 'POST',
+                    url: '{% url "message_edit" 0 %}'.replace('0', messageId),
+                    data: {
+                        content: sanitizedContent,
+                        csrfmiddlewaretoken: '{{ csrf_token }}'
+                    },
+                    success: function (response) {
+                        if (response.success) {
+                            // Update the message content
+                            $('#message-content-' + messageId).text(response.message.content);
 
-                                // Show success message
-                                Swal.fire({
-                                    title: "Success",
-                                    text: "Message updated successfully.",
-                                    icon: "success",
-                                    confirmButtonText: "OK",
-                                });
-                            } else {
-                                // Show error message
-                                Swal.fire({
-                                    title: "Error",
-                                    text: response.error,
-                                    icon: "error",
-                                    confirmButtonText: "OK",
-                                });
-                            }
-                        },
-                        error: function (xhr, status, error) {
+                            // Show success message
+                            Swal.fire({
+                                title: "Success",
+                                text: "Message updated successfully.",
+                                icon: "success",
+                                confirmButtonText: "OK",
+                            });
+                        } else {
                             // Show error message
                             Swal.fire({
                                 title: "Error",
-                                text: "An error occurred. Please try again.",
+                                text: response.error,
                                 icon: "error",
                                 confirmButtonText: "OK",
                             });
                         }
-                    });
-                }
-            });
+                    },
+                    error: function (xhr, status, error) {
+                        // Show error message
+                        Swal.fire({
+                            title: "Error",
+                            text: "An error occurred. Please try again.",
+                            icon: "error",
+                            confirmButtonText: "OK",
+                        });
+                    }
+                });
+            }
         });
     });
+});
 </script>
 {% endblock %}
