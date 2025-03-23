@@ -6,6 +6,8 @@
 <div class="form-container">
     <h1>Edit your offer specifications:</h1>
     <br>
+    <p><strong>Note:</strong> Editing this offer will change its status to "Pending" until it is reviewed by an admin.</p>
+    <br>
     <form method="POST" action="{% url 'edit_offer' offer.id %}" enctype="multipart/form-data">
         {% csrf_token %}
 

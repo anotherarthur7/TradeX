@@ -1,11 +1,12 @@
 from django.contrib import admin
-from .models import Offer, Thread, Message, Profile
+from .models import Offer, Thread, Message, Profile, Report
 
 # Register your models here.
 admin.site.register(Offer)
 admin.site.register(Thread)
 admin.site.register(Message)
 admin.site.register(Profile)
+admin.site.register(Report)
 
 # TradeGod
 # Bargain-bargainAllTheTIME!

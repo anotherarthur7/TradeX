@@ -11,6 +11,7 @@
                 <th>Username</th>
                 <th>Email</th>
                 <th>Date Joined</th>
+                <th>Can Post Messages</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -20,69 +21,79 @@
                     <td>{{ user.username }}</td>
                     <td>{{ user.email }}</td>
                     <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+                    <td>{{ user.profile.can_post_messages|yesno:"Yes,No" }}</td>
                     <td>
                         <a href="{% url 'edit_user' user.id %}" class="btn btn-edit">Edit</a>
                         <a href="{% url 'delete_user' user.id %}" class="btn btn-delete">Delete</a>
+                        <a href="{% url 'toggle_user_post_permission' user.id %}" class="btn btn-warning">
+                            {% if user.profile.can_post_messages %}Restrict{% else %}Allow{% endif %} Posting
+                        </a>
                     </td>
                 </tr>
             {% empty %}
                 <tr>
-                    <td colspan="4">No users found.</td>
+                    <td colspan="5">No users found.</td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
 </div>
 <style>
-    /* Add this to your main.css file */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
 
-.user-table {
+    .user-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
 
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
+    .user-table th, .user-table td {
+        padding: 10px;
+        color: antiquewhite;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
 
-.user-table th, .user-table td {
-    padding: 10px;
-    color: antiquewhite;
-    border: 1px solid #ddd;
-    text-align: left;
-}
+    .user-table th {
+        background-color: #978dc9;
+    }
 
-.user-table th {
-    background-color: #978dc9; 
-}
+    .btn {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        color: white;
+    }
 
-.btn {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 3px;
-    cursor: pointer;
-    font-size: 14px;
-    text-decoration: none;
-    color: white;
-}
+    .btn-edit {
+        background-color: #28a745;
+    }
 
-.btn-edit {
-    background-color: #28a745;
-}
+    .btn-delete {
+        background-color: #dc3545;
+    }
 
-.btn-delete {
-    background-color: #dc3545;
-}
+    .btn-warning {
+        background-color: #ffc107;
+    }
 
-.btn-edit:hover {
-    background-color: #218838;
-}
+    .btn-edit:hover {
+        background-color: #218838;
+    }
 
-.btn-delete:hover {
-    background-color: #c82333;
-}
+    .btn-delete:hover {
+        background-color: #c82333;
+    }
+
+    .btn-warning:hover {
+        background-color: #e0a800;
+    }
 </style>
 {% endblock %}

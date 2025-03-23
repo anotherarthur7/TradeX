@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <h1>Report Message</h1>
+    <p>You are reporting the following message:</p>
+    <blockquote>{{ message.content }}</blockquote>
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-danger">Submit Report</button>
+    </form>
+</div>
+{% endblock %}

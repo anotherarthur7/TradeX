@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Pending Reports{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Pending Reports</h1>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Report ID</th>
+                <th>Message</th>
+                <th>Reason</th>
+                <th>Reporter</th>
+                <th>Report Comment</th>
+                <th>Message Author</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for report in reports %}
+            <tr>
+                <td>{{ report.id }}</td>
+                <td>{{ report.reported_message.content }}</td>
+                <td>{{ report.get_reason_display }}</td>
+                <td>{{ report.reporter.username }}</td>
+                <td>{{ report.message|default:"No additional comment" }}</td>
+                <td>{{ report.reported_message.author.username }}</td>
+                <td>
+                    <a href="{% url 'resolve_report' report.id %}" class="btn btn-resolve">Resolve</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">No pending reports.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+
+    .report-table th, .report-table td {
+        padding: 10px;
+        color: antiquewhite;
+        border: 1px solid #ddd;
+        text-align: left;
+    }
+
+    .report-table th {
+        background-color: #978dc9;
+    }
+
+    .btn {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 14px;
+        text-decoration: none;
+        color: white;
+    }
+
+    .btn-resolve {
+        background-color: #28a745;
+    }
+
+    .btn-resolve:hover {
+        background-color: #218838;
+    }
+</style>
+{% endblock %}

@@ -27,6 +27,7 @@ class Offer(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to='images/', blank=True, null=True)
+    can_post_messages = models.BooleanField(default=True)  # Allow users to post messages by default
 
     def __str__(self):
         return f'{self.user.username} Profile'
@@ -63,6 +64,7 @@ class Message(models.Model):
     content = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+    is_restricted = models.BooleanField(default=False)  # To restrict access to the message
 
     def is_editable(self):
         # Check if the message is editable (within 10 minutes of creation)
@@ -71,3 +73,27 @@ class Message(models.Model):
 
     def __str__(self):
         return f'Message by {self.author.username} in {self.thread.topic}'
+    
+class Report(models.Model):
+    REASON_CHOICES = [
+        ('spam', 'Spam'),
+        ('harassment', 'Harassment'),
+        ('hate_speech', 'Hate Speech'),
+        ('inappropriate_content', 'Inappropriate Content'),
+        ('other', 'Other'),
+    ]
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('resolved', 'Resolved'),
+    ]
+
+    reported_message = models.ForeignKey('Message', on_delete=models.CASCADE, related_name='reports')
+    reporter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_submitted')
+    reason = models.CharField(max_length=50, choices=REASON_CHOICES)
+    message = models.TextField(blank=True, null=True)  # Optional additional message
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Report #{self.id} - {self.reported_message}"

@@ -30,4 +30,9 @@ urlpatterns = [
     path('manage-users/', views.manage_users, name='manage_users'),
     path('edit-user/<int:user_id>/', views.edit_user, name='edit_user'),
     path('delete-user/<int:user_id>/', views.delete_user, name='delete_user'),
+    path('forum/report/<int:message_id>/', views.report_message, name='report_message'),
+    path('admin/reports/', views.view_reports, name='view_reports'),
+    path('admin/reports/resolve/<int:report_id>/', views.resolve_report, name='resolve_report'),
+    path('thread/<int:thread_id>/message/create/', views.message_create, name='message_create'),
+    path('admin/toggle-post-permission/<int:user_id>/', views.toggle_user_post_permission, name='toggle_user_post_permission'),
 ]
