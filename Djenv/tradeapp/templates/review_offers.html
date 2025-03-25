@@ -57,27 +57,23 @@
                 url: '{% url "approve_offer" 0 %}'.replace('0', offerId),
                 data: {
                     csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    if (response.success) {
-                        // Update status message
-                        $statusMessage.text('Approved').css('color', 'green');
-
-                        // Remove the offer from the list after a delay
-                        setTimeout(function () {
-                            $('#offer-' + offerId).fadeOut(500, function () {
-                                $(this).remove();
-                                // Check if there are any pending offers left
-                                checkPendingOffers();
-                            });
-                        }, 1000);
-                    } else {
-                        $statusMessage.text('Failed to approve').css('color', 'red');
-                    }
-                },
-                error: function () {
-                    $statusMessage.text('An error occurred').css('color', 'red');
                 }
+            })
+            .done(function(response) {
+                if (response.success) {
+                    $statusMessage.text('Approved').css('color', 'green');
+                    setTimeout(function() {
+                        $('#offer-' + offerId).fadeOut(500, function() {
+                            $(this).remove();
+                            checkPendingOffers();
+                        });
+                    }, 1000);
+                } else {
+                    $statusMessage.text('Failed to approve').css('color', 'red');
+                }
+            })
+            .fail(function() {
+                $statusMessage.text('An error occurred').css('color', 'red');
             });
         });
 
@@ -96,27 +92,23 @@
                 url: '{% url "reject_offer" 0 %}'.replace('0', offerId),
                 data: {
                     csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                success: function (response) {
-                    if (response.success) {
-                        // Update status message
-                        $statusMessage.text('Rejected').css('color', 'red');
-
-                        // Remove the offer from the list after a delay
-                        setTimeout(function () {
-                            $('#offer-' + offerId).fadeOut(500, function () {
-                                $(this).remove();
-                                // Check if there are any pending offers left
-                                checkPendingOffers();
-                            });
-                        }, 1000);
-                    } else {
-                        $statusMessage.text('Failed to reject').css('color', 'red');
-                    }
-                },
-                error: function () {
-                    $statusMessage.text('An error occurred').css('color', 'red');
                 }
+            })
+            .done(function(response) {
+                if (response.success) {
+                    $statusMessage.text('Rejected').css('color', 'red');
+                    setTimeout(function() {
+                        $('#offer-' + offerId).fadeOut(500, function() {
+                            $(this).remove();
+                            checkPendingOffers();
+                        });
+                    }, 1000);
+                } else {
+                    $statusMessage.text('Failed to reject').css('color', 'red');
+                }
+            })
+            .fail(function() {
+                $statusMessage.text('An error occurred').css('color', 'red');
             });
         });
     });
