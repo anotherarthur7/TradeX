@@ -15,14 +15,34 @@ from django.utils import timezone
 from .forms import CustomPasswordChangeForm
 from django.core.mail import send_mail
 from django.conf import settings
+from .models import VerificationCode
 import json
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
+import secrets
+from datetime import timedelta
+from django.utils import timezone
 from django.contrib.auth.models import User
 from django.views.decorators.http import require_POST
 from django.core.exceptions import ValidationError
+from register import views as d
+from django.shortcuts import render, redirect
+from register.forms import RegisterForm
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.conf import settings
+from .models import VerificationCode
+from django.contrib.auth import login
+from django_ratelimit.decorators import ratelimit
 
 def is_admin(user):
     return user.is_staff
 
+@ratelimit(key='ip', rate='10/m')
 def thread_list(request):
     # Get all threads
     threads = Thread.objects.all()
@@ -54,6 +74,7 @@ def thread_list(request):
     })
 
 @login_required
+@ratelimit(key='ip', rate='3/m')
 def message_create(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
 
@@ -89,6 +110,7 @@ def message_create(request, thread_id):
         return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
 @require_POST
+@ratelimit(key='ip', rate='3/m')
 def message_edit(request, message_id):
     message = get_object_or_404(Message, id=message_id)
 
@@ -113,7 +135,8 @@ def message_edit(request, message_id):
         })
     else:
         return JsonResponse({'success': False, 'error': 'Invalid form submission.'})
-
+    
+@ratelimit(key='ip', rate='5/m')
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
     message_list = thread.messages.all()
@@ -163,6 +186,7 @@ def thread_detail(request, thread_id):
     })
 
 @login_required
+@ratelimit(key='ip', rate='2/m')
 def thread_create(request):
     if request.method == 'POST':
         form = ThreadForm(request.POST)
@@ -187,6 +211,7 @@ def thread_create(request):
 
 @staff_member_required
 @login_required
+@ratelimit(key='ip', rate='5/m')
 def thread_delete(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
     if request.method == 'POST':
@@ -195,6 +220,7 @@ def thread_delete(request, thread_id):
     return redirect('thread_detail', thread_id=thread.id)
 
 @login_required
+@ratelimit(key='ip', rate='5/m')
 def message_delete(request, message_id):
     # Fetch the message or return a 404 error if it doesn't exist
     message = get_object_or_404(Message, id=message_id)
@@ -209,12 +235,15 @@ def message_delete(request, message_id):
     # Redirect back to the thread detail page
     return redirect('thread_detail', thread_id=message.thread.id)
 
+@ratelimit(key='ip', rate='5/m')
 def home(request):
     return render(request, 'home.html', {'is_home': True})
 
+@ratelimit(key='ip', rate='5/m')
 def about(request):
 	return render(request, "about.html")
 
+@ratelimit(key='ip', rate='5/m')
 def offermain(request):
     show_closed = request.GET.get('show_closed', 'false').lower() == 'true'  # Convert to boolean
     if show_closed:
@@ -223,6 +252,7 @@ def offermain(request):
         offers = Offer.objects.filter(is_open=True)
     return render(request, "offermain.html", {"offers": offers, "show_closed": show_closed})
 
+@ratelimit(key='ip', rate='10/m')
 def itemIndex(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
     is_admin = request.user.is_staff
@@ -244,6 +274,7 @@ def itemIndex(request, req_id):
     })
 
 @login_required
+@ratelimit(key='ip', rate='5/m')
 def create(request):
     if request.method == 'POST':
         form = OfferForm(request.POST, request.FILES)
@@ -262,6 +293,7 @@ def create(request):
         form = OfferForm()
     return render(request, 'create.html', {'form': form})
 
+@ratelimit(key='ip', rate='10/m')
 def login_view(request):
     storage = messages.get_messages(request)
     for message in storage:
@@ -306,6 +338,7 @@ def logout_view(request):
     return redirect('home')
 
 @login_required
+@ratelimit(key='ip', rate='5/m')
 def edit_offer(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
     
@@ -335,6 +368,7 @@ def edit_offer(request, req_id):
     return render(request, 'edit_offer.html', {'form': form, 'offer': offer})
 
 @login_required
+@ratelimit(key='ip', rate='10/m')
 def delete_offer(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
     
@@ -348,6 +382,7 @@ def delete_offer(request, req_id):
     return redirect('offermain')
 
 @login_required
+@ratelimit(key='ip', rate='5/m')
 def profile(request):
     if request.method == 'POST':
         # Use the custom password change form
@@ -367,6 +402,7 @@ def profile(request):
     })
 
 @login_required
+@ratelimit(key='ip', rate='10/m')
 def my_offers(request):
     open_offers = Offer.objects.filter(user=request.user, is_open=True)
     closed_offers = Offer.objects.filter(user=request.user, is_open=False)
@@ -469,6 +505,7 @@ def delete_user(request, user_id):
     return render(request, 'confirm_delete_user.html', {'user': user})
 
 @login_required
+@ratelimit(key='ip', rate='10/m')
 def report_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
     if request.method == 'POST':
@@ -516,3 +553,236 @@ def resolve_report(request, report_id):
         report.save()
         return redirect('view_reports')
     return render(request, 'resolve_report.html', {'report': report})
+
+@ratelimit(key='ip', rate='5/m')
+def resend_verification(response):
+    if response.method == "POST":
+        user_id = response.POST.get('user_id')
+        try:
+            user = User.objects.get(id=user_id)
+            # Delete any existing codes
+            VerificationCode.objects.filter(user=user).delete()
+            # Generate new code
+            verification_code = VerificationCode.generate_code(user)
+            # Send email
+            send_verification_email(user.email, verification_code.code)
+            
+            return JsonResponse({'success': True})
+        except User.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'User not found'
+            })
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request'
+    })
+
+@ratelimit(key='ip', rate='2/m')
+def register(response):
+    if response.user.is_authenticated:
+        return redirect('home')
+    
+    if response.method == "POST":
+        # Check if this is the verification step
+        if 'verification_code' in response.POST:
+            return handle_verification(response)
+        
+        # Original registration form handling
+        form = RegisterForm(response.POST)
+        if form.is_valid():
+            # Save user but don't log them in yet
+            user = form.save(commit=False)
+            user.is_active = False  # User won't be active until verified
+            user.save()
+            
+            # Generate and send verification code
+            verification_code = VerificationCode.generate_code(user)
+            
+            # Send email with verification code
+            send_verification_email(user.email, verification_code.code)
+            
+            # Return success but indicate verification is needed
+            return JsonResponse({
+                'success': True,
+                'verification_required': True,
+                'user_id': user.id  # We'll need this for the verification step
+            })
+        else:
+            errors = {field: form.errors[field] for field in form.errors}
+            return JsonResponse({'success': False, 'errors': errors})
+    else:
+        form = RegisterForm()
+        
+    return render(response, "register.html", {"form": form})
+
+def handle_verification(response):
+    user_id = response.POST.get('user_id')
+    code = response.POST.get('verification_code')
+    
+    try:
+        user = User.objects.get(id=user_id)
+        verification_code = VerificationCode.objects.get(user=user, code=code)
+        
+        if verification_code.is_valid():
+            # Mark code as used
+            verification_code.is_used = True
+            verification_code.save()
+            
+            # Activate user
+            user.is_active = True
+            user.save()
+            
+            # Log the user in
+            login(response, user)
+            
+            return JsonResponse({'success': True})
+        else:
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid or expired verification code'
+            })
+    except (User.DoesNotExist, VerificationCode.DoesNotExist):
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid verification code'
+        })
+
+@ratelimit(key='ip', rate='5/m')
+def send_verification_email(email, code):
+    subject = 'Your Verification Code'
+    message = f'Your verification code is: {code}'
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [email],
+        fail_silently=False,
+    )
+
+@ratelimit(key='ip', rate='2/m')
+def request_password_reset(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        try:
+            user = User.objects.get(email=email)
+            
+            # Generate and save verification code
+            code = str(secrets.randbelow(999999)).zfill(6)
+            request.session['reset_code'] = code
+            request.session['reset_user_id'] = user.id
+            request.session['reset_code_time'] = str(timezone.now())
+            
+            # Send email with verification code
+            send_mail(
+                'Password Reset Verification Code',
+                f'Your verification code is: {code}',
+                settings.DEFAULT_FROM_EMAIL,
+                [email],
+                fail_silently=False,
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'user_id': user.id
+            })
+        except User.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'No account found with that email address.'
+            })
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method.'
+    })
+
+def verify_password_reset(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        code = request.POST.get('code')
+        new_password = request.POST.get('new_password')
+        
+        # Validate the code
+        if ('reset_code' not in request.session or 
+            'reset_user_id' not in request.session or 
+            'reset_code_time' not in request.session):
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid verification request.'
+            })
+            
+        if (request.session['reset_user_id'] != int(user_id)) or \
+           (request.session['reset_code'] != code):
+            return JsonResponse({
+                'success': False,
+                'error': 'Invalid verification code.'
+            })
+            
+        # Check if code is expired (15 minutes)
+        code_time = timezone.datetime.fromisoformat(request.session['reset_code_time'])
+        if (timezone.now() - code_time) > timedelta(minutes=15):
+            return JsonResponse({
+                'success': False,
+                'error': 'Verification code has expired.'
+            })
+            
+        try:
+            user = User.objects.get(id=user_id)
+            user.set_password(new_password)
+            user.save()
+            
+            # Clear the reset session data
+            del request.session['reset_code']
+            del request.session['reset_user_id']
+            del request.session['reset_code_time']
+            
+            return JsonResponse({'success': True})
+        except User.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'User not found.'
+            })
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method.'
+    })
+
+@ratelimit(key='ip', rate='5/m')
+def resend_reset_code(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        try:
+            user = User.objects.get(id=user_id)
+            
+            # Generate new code
+            code = str(secrets.randbelow(999999)).zfill(6)
+            request.session['reset_code'] = code
+            request.session['reset_user_id'] = user.id
+            request.session['reset_code_time'] = str(timezone.now())
+            
+            # Send email with new code
+            send_mail(
+                'Password Reset Verification Code',
+                f'Your new verification code is: {code}',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            
+            return JsonResponse({'success': True})
+        except User.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'User not found.'
+            })
+    return JsonResponse({
+        'success': False,
+        'error': 'Invalid request method.'
+    })
+
+from django.http import JsonResponse
+
+def rate_limit_view(request, exception):
+    return JsonResponse({
+        'error': 'Too many requests. Please try again later.'
+    }, status=429)

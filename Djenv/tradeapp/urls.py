@@ -1,11 +1,12 @@
 from django.urls import path
 from . import views
-import register.views as v
+from .views import resend_verification
+from .views import request_password_reset, verify_password_reset, resend_reset_code
 
 
 urlpatterns = [
 	path("", views.home, name="home"),
-    path('register', v.register, name='register'),
+    path('register', views.register, name='register'),
     path('logout', views.logout_view, name='logout'),
     path('login', views.login_view, name='login'),
     path("home", views.home, name="home"),
@@ -14,6 +15,7 @@ urlpatterns = [
     path("offermain", views.offermain, name="offermain"),
     path('forum/', views.thread_list, name='thread_list'),
     path('forum/thread/<int:thread_id>/', views.thread_detail, name='thread_detail'),
+    path('resend-verification/', resend_verification, name='resend_verification'),
     path('forum/thread/create/', views.thread_create, name='thread_create'),
     path('forum/thread/<int:thread_id>/delete/', views.thread_delete, name='thread_delete'),
     path('forum/message/<int:message_id>/delete/', views.message_delete, name='message_delete'),
@@ -35,4 +37,7 @@ urlpatterns = [
     path('admin/reports/resolve/<int:report_id>/', views.resolve_report, name='resolve_report'),
     path('thread/<int:thread_id>/message/create/', views.message_create, name='message_create'),
     path('admin/toggle-post-permission/<int:user_id>/', views.toggle_user_post_permission, name='toggle_user_post_permission'),
+    path('request-password-reset/', request_password_reset, name='request_password_reset'),
+    path('verify-password-reset/', verify_password_reset, name='verify_password_reset'),
+    path('resend-reset-code/', resend_reset_code, name='resend_reset_code'),
 ]

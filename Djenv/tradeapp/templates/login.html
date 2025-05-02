@@ -35,8 +35,66 @@
 
         <button type="submit" class="btn btn-success">Login</button>
     </form>
-    <br>
+<!-- Add this below your login button -->
+<div class="form-footer">
     <p>Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
+    <p><a href="#" id="forgot-password">Forgot your password?</a></p>
+</div>
+
+<!-- Add this modal at the bottom of your template -->
+<div id="password-reset-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h2>Reset Your Password</h2>
+        <p>Enter your email address and we'll send you a verification code to reset your password.</p>
+        
+        <div id="reset-error" class="alert alert-danger" style="display: none;"></div>
+        
+        <form id="password-reset-form">
+            <div class="form-group">
+                <label for="reset-email">Email Address</label>
+                <input type="email" id="reset-email" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-success">Send Verification Code</button>
+        </form>
+    </div>
+</div>
+
+<!-- Add this modal for verification code entry -->
+<div id="reset-verify-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h2>Verify Your Email</h2>
+        <p>We've sent a 6-digit verification code to your email address.</p>
+        
+        <div id="reset-verify-error" class="alert alert-danger" style="display: none;"></div>
+        
+        <form id="reset-verify-form">
+            <input type="hidden" id="reset-user-id">
+            <div class="form-group">
+                <label for="reset-code">Verification Code</label>
+                <input type="text" id="reset-code" class="form-control" maxlength="6" required>
+            </div>
+            <div class="form-group">
+                <label for="new-password">New Password</label>
+                <div class="password-toggle">
+                    <input type="password" id="new-password" class="form-control" required>
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility" data-target="new-password">
+                        👁️
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="confirm-password">Confirm New Password</label>
+                <div class="password-toggle">
+                    <input type="password" id="confirm-password" class="form-control" required>
+                    <button type="button" class="toggle-password" aria-label="Toggle password visibility" data-target="confirm-password">
+                        👁️
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-success">Reset Password</button>
+            <button type="button" id="resend-reset-code" class="btn btn-link">Resend Code</button>
+        </form>
+    </div>
 </div>
 
 <!-- JavaScript for Password Peeking -->
@@ -107,6 +165,99 @@
             $('#remember_me').prop('checked', true);
         }
     });
+
+        // Forgot password link click handler
+        $('#forgot-password').on('click', function(e) {
+            e.preventDefault();
+            $('#password-reset-modal').show();
+        });
+        
+        // Password reset form submission
+        $('#password-reset-form').on('submit', function(e) {
+            e.preventDefault();
+            $('#reset-error').hide();
+            
+            $.ajax({
+                type: 'POST',
+                url: '{% url "request_password_reset" %}',
+                data: {
+                    'email': $('#reset-email').val(),
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('#password-reset-modal').hide();
+                        $('#reset-user-id').val(response.user_id);
+                        $('#reset-verify-modal').show();
+                    } else {
+                        $('#reset-error').html(response.error).show();
+                    }
+                },
+                error: function() {
+                    $('#reset-error').html('An error occurred. Please try again.').show();
+                }
+            });
+        });
+        
+        // Verification form submission
+        $('#reset-verify-form').on('submit', function(e) {
+            e.preventDefault();
+            $('#reset-verify-error').hide();
+            
+            // Validate passwords match
+            if ($('#new-password').val() !== $('#confirm-password').val()) {
+                $('#reset-verify-error').html('Passwords do not match.').show();
+                return;
+            }
+            
+            $.ajax({
+                type: 'POST',
+                url: '{% url "verify_password_reset" %}',
+                data: {
+                    'user_id': $('#reset-user-id').val(),
+                    'code': $('#reset-code').val(),
+                    'new_password': $('#new-password').val(),
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('Your password has been reset successfully. Please login with your new password.');
+                        $('#reset-verify-modal').hide();
+                    } else {
+                        $('#reset-verify-error').html(response.error).show();
+                    }
+                },
+                error: function() {
+                    $('#reset-verify-error').html('An error occurred. Please try again.').show();
+                }
+            });
+        });
+        
+        // Resend reset code
+        $('#resend-reset-code').on('click', function() {
+            $.ajax({
+                type: 'POST',
+                url: '{% url "resend_reset_code" %}',
+                data: {
+                    'user_id': $('#reset-user-id').val(),
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('A new verification code has been sent to your email.');
+                    } else {
+                        $('#reset-verify-error').html(response.error).show();
+                    }
+                }
+            });
+        });
+        
+        // Close modals when clicking outside
+        $('.modal').on('click', function(e) {
+            if (e.target === this) {
+                $(this).hide();
+            }
+        });
 
     // Helper function to get a cookie value
     function getCookie(name) {

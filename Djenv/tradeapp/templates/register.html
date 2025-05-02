@@ -55,6 +55,54 @@
     <p>Already have an account? <a href="{% url 'login' %}">Login here</a>.</p>
 </div>
 
+<div id="verification-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <h2 style="color: black;">Verify Your Email</h2>
+        <p style="color: black;">We've sent a 6-digit verification code to your email address.</p>
+        
+        <div id="verification-error" class="alert alert-danger" style="display: none;"></div>
+        
+        <form id="verification-form">
+            <input type="hidden" id="verification-user-id" value="">
+            <div class="form-group">
+                <label for="verification-code">Verification Code</label>
+                <input type="text" id="verification-code" class="form-control" maxlength="6">
+            </div>
+            <button type="submit" class="btn btn-success">Verify</button>
+            <button type="button" id="resend-code" class="btn btn-link">Resend Code</button>
+        </form>
+    </div>
+</div>
+<style>
+    /* Modal Styling */
+    .a{
+        color:black;
+    }
+    .modal {
+        color:black;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    .modal-content {
+        color:black;
+        background: #978dc9;
+        padding: 20px;
+        border-radius: 5px;
+        width: 100%;
+        max-width: 400px;
+    }
+</style>
+
+
 <!-- JavaScript for AJAX Form Submission -->
 <script>
     $(document).ready(function () {
@@ -66,26 +114,31 @@
         });
 
         $('#register-form').on('submit', function (e) {
-            e.preventDefault();  // Prevent the default form submission
-
+            e.preventDefault();
+            
             // Clear previous error messages
             $('#error-message').hide().html('');
             $('.form-error').html('');
-
+            
             $.ajaxSetup({
                 headers: {
                     'X-CSRFToken': $('input[name="csrfmiddlewaretoken"]').val()
                 }
             });
-
+            
             $.ajax({
                 type: 'POST',
                 url: '{% url "register" %}',
                 data: $(this).serialize(),
                 success: function (response) {
-                    console.log(response);  // Debug: Log the response to the console
                     if (response.success) {
-                        window.location.href = '{% url "login" %}';  // Redirect on success
+                        if (response.verification_required) {
+                            // Show verification modal
+                            $('#verification-user-id').val(response.user_id);
+                            $('#verification-modal').show();
+                        } else {
+                            window.location.href = '{% url "login" %}';
+                        }
                     } else {
                         // Display form errors
                         if (response.errors) {
@@ -93,13 +146,59 @@
                                 $('#id_' + field + '-error').html(response.errors[field].join('<br>')).show();
                             }
                         } else {
-                            $('#error-message').html('An unexpected error occurred.').show();  // Display general error message
+                            $('#error-message').html('An unexpected error occurred.').show();
                         }
                     }
                 },
                 error: function (xhr, status, error) {
-                    console.error(xhr.responseText);  // Debug: Log the error to the console
+                    console.error(xhr.responseText);
                     $('#error-message').html('An error occurred. Please try again.').show();
+                }
+            });
+        });
+        
+        // Verification form submission
+        $('#verification-form').on('submit', function(e) {
+            e.preventDefault();
+            
+            $('#verification-error').hide();
+            
+            $.ajax({
+                type: 'POST',
+                url: '{% url "register" %}',
+                data: {
+                    'verification_code': $('#verification-code').val(),
+                    'user_id': $('#verification-user-id').val(),
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        window.location.href = '{% url "home" %}';  // Redirect to home after successful verification
+                    } else {
+                        $('#verification-error').html(response.error).show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    $('#verification-error').html('An error occurred. Please try again.').show();
+                }
+            });
+        });
+        
+        // Resend code functionality
+        $('#resend-code').on('click', function() {
+            $.ajax({
+                type: 'POST',
+                url: '{% url "resend_verification" %}',  // You'll need to create this URL
+                data: {
+                    'user_id': $('#verification-user-id').val(),
+                    'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()
+                },
+                success: function(response) {
+                    if (response.success) {
+                        alert('A new verification code has been sent to your email.');
+                    } else {
+                        $('#verification-error').html(response.error).show();
+                    }
                 }
             });
         });

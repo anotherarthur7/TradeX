@@ -3,6 +3,8 @@ from django.contrib.auth.models import User
 from django.dispatch import receiver
 from django.db.models.signals import post_save
 from django.utils import timezone
+from datetime import timedelta
+import secrets
 from django.core.exceptions import ValidationError
 # Create your models here.
 
@@ -97,3 +99,21 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report #{self.id} - {self.reported_message}"
+    
+class VerificationCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+    
+    def is_valid(self):
+        return not self.is_used and (timezone.now() - self.created_at) < timedelta(minutes=15)
+    
+    @classmethod
+    def generate_code(cls, user):
+        # Delete any existing codes for this user
+        cls.objects.filter(user=user).delete()
+        
+        # Generate a new 6-digit code
+        code = str(secrets.randbelow(999999)).zfill(6)
+        return cls.objects.create(user=user, code=code)
