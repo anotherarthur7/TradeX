@@ -40,11 +40,9 @@ LOGIN_URL = 'login'  # Use the name of your login URL pattern
 
 INSTALLED_APPS = [
     'django.contrib.admin',
-    'sslserver',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django_extensions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tradeapp',

@@ -554,7 +554,7 @@ def resolve_report(request, report_id):
         return redirect('view_reports')
     return render(request, 'resolve_report.html', {'report': report})
 
-@ratelimit(key='ip', rate='5/m')
+
 def resend_verification(response):
     if response.method == "POST":
         user_id = response.POST.get('user_id')
@@ -648,7 +648,7 @@ def handle_verification(response):
             'error': 'Invalid verification code'
         })
 
-@ratelimit(key='ip', rate='5/m')
+
 def send_verification_email(email, code):
     subject = 'Your Verification Code'
     message = f'Your verification code is: {code}'
@@ -747,7 +747,6 @@ def verify_password_reset(request):
         'error': 'Invalid request method.'
     })
 
-@ratelimit(key='ip', rate='5/m')
 def resend_reset_code(request):
     if request.method == 'POST':
         user_id = request.POST.get('user_id')
