@@ -711,7 +711,7 @@ def request_password_reset(request):
     }
     
     try:
-        html_message = render_to_string('emails/password_reset.html', context)
+        html_message = render_to_string('password_reset.html', context)
         plain_message = strip_tags(html_message)
         
         email = EmailMessage(
