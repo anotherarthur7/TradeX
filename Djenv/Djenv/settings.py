@@ -141,7 +141,13 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # File system path to store media 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email Configuration
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'wastedwebsitesapplier@gmail.com'  # Your Gmail address
+EMAIL_HOST_PASSWORD = 'dmjr xhxw yaqt kqjo'  # Your app password (see step 2)
+DEFAULT_FROM_EMAIL = 'wastedwebsitesapplier@gmail.com'  # Should match EMAIL_HOST_USER
 
 # Security
 
@@ -162,3 +168,4 @@ SESSION_COOKIE_AGE = 3600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 RATELIMIT_VIEW = 'tradeapp.views.rate_limit_view'
+

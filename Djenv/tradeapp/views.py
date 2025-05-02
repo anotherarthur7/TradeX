@@ -2,6 +2,9 @@ from django.shortcuts import render, HttpResponse, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import HttpResponseRedirect
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from .models import Offer
 from django.http import JsonResponse
 from .forms import OfferForm, ReportForm
@@ -15,6 +18,7 @@ from django.utils import timezone
 from .forms import CustomPasswordChangeForm
 from django.core.mail import send_mail
 from django.conf import settings
+from django.core.mail import EmailMessage
 from .models import VerificationCode
 import json
 from django.contrib.auth.tokens import default_token_generator
@@ -578,7 +582,7 @@ def resend_verification(response):
         'error': 'Invalid request'
     })
 
-@ratelimit(key='ip', rate='2/m')
+@ratelimit(key='ip', rate='5/m')
 def register(response):
     if response.user.is_authenticated:
         return redirect('home')
@@ -651,50 +655,84 @@ def handle_verification(response):
 
 def send_verification_email(email, code):
     subject = 'Your Verification Code'
-    message = f'Your verification code is: {code}'
-    send_mail(
+    message = f'''
+    Hello,
+    
+    Your verification code is: {code}
+    
+    This code will expire in 15 minutes.
+    
+    If you didn't request this, please ignore this email.
+    '''
+    
+    email = EmailMessage(
         subject,
         message,
-        settings.DEFAULT_FROM_EMAIL,
-        [email],
-        fail_silently=False,
+        to=[email]
     )
+    email.send()
 
 @ratelimit(key='ip', rate='2/m')
 def request_password_reset(request):
-    if request.method == 'POST':
-        email = request.POST.get('email')
-        try:
-            user = User.objects.get(email=email)
-            
-            # Generate and save verification code
-            code = str(secrets.randbelow(999999)).zfill(6)
-            request.session['reset_code'] = code
-            request.session['reset_user_id'] = user.id
-            request.session['reset_code_time'] = str(timezone.now())
-            
-            # Send email with verification code
-            send_mail(
-                'Password Reset Verification Code',
-                f'Your verification code is: {code}',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
-            
-            return JsonResponse({
-                'success': True,
-                'user_id': user.id
-            })
-        except User.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'error': 'No account found with that email address.'
-            })
-    return JsonResponse({
-        'success': False,
-        'error': 'Invalid request method.'
-    })
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request method.'
+        }, status=400)
+
+    email = request.POST.get('email')
+    if not email:
+        return JsonResponse({
+            'success': False,
+            'error': 'Email address is required.'
+        }, status=400)
+
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        # Don't reveal whether email exists for security
+        return JsonResponse({
+            'success': True,
+            'message': 'If an account exists with this email, you will receive a reset code.'
+        })
+
+    # Generate and save verification code
+    code = str(secrets.randbelow(999999)).zfill(6)
+    request.session['reset_code'] = code
+    request.session['reset_user_id'] = user.id
+    request.session['reset_code_time'] = str(timezone.now())
+
+    # Send email with HTML template
+    subject = 'Password Reset Verification Code'
+    context = {
+        'code': code,
+        'user': user,
+        'expiry_minutes': 15
+    }
+    
+    try:
+        html_message = render_to_string('emails/password_reset.html', context)
+        plain_message = strip_tags(html_message)
+        
+        email = EmailMessage(
+            subject,
+            html_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+        )
+        email.content_subtype = "html"  # Set content to HTML
+        email.send()
+        
+        return JsonResponse({
+            'success': True,
+            'user_id': user.id,
+            'message': 'Verification code sent to your email.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to send verification email. Please try again.'
+        }, status=500)
 
 def verify_password_reset(request):
     if request.method == 'POST':
@@ -747,38 +785,66 @@ def verify_password_reset(request):
         'error': 'Invalid request method.'
     })
 
+@ratelimit(key='ip', rate='3/h')
 def resend_reset_code(request):
-    if request.method == 'POST':
-        user_id = request.POST.get('user_id')
-        try:
-            user = User.objects.get(id=user_id)
-            
-            # Generate new code
-            code = str(secrets.randbelow(999999)).zfill(6)
-            request.session['reset_code'] = code
-            request.session['reset_user_id'] = user.id
-            request.session['reset_code_time'] = str(timezone.now())
-            
-            # Send email with new code
-            send_mail(
-                'Password Reset Verification Code',
-                f'Your new verification code is: {code}',
-                settings.DEFAULT_FROM_EMAIL,
-                [user.email],
-                fail_silently=False,
-            )
-            
-            return JsonResponse({'success': True})
-        except User.DoesNotExist:
-            return JsonResponse({
-                'success': False,
-                'error': 'User not found.'
-            })
-    return JsonResponse({
-        'success': False,
-        'error': 'Invalid request method.'
-    })
+    if request.method != 'POST':
+        return JsonResponse({
+            'success': False,
+            'error': 'Invalid request method.'
+        }, status=400)
 
+    user_id = request.POST.get('user_id')
+    if not user_id:
+        return JsonResponse({
+            'success': False,
+            'error': 'User ID is required.'
+        }, status=400)
+
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'User not found.'
+        }, status=404)
+
+    # Generate new code
+    code = str(secrets.randbelow(999999)).zfill(6)
+    request.session['reset_code'] = code
+    request.session['reset_user_id'] = user.id
+    request.session['reset_code_time'] = str(timezone.now())
+
+    # Send email with new code
+    subject = 'New Password Reset Verification Code'
+    context = {
+        'code': code,
+        'user': user,
+        'expiry_minutes': 15
+    }
+    
+    try:
+        html_message = render_to_string('emails/password_reset.html', context)
+        plain_message = strip_tags(html_message)
+        
+        email = EmailMessage(
+            subject,
+            html_message,
+            settings.DEFAULT_FROM_EMAIL,
+            [user.email],
+        )
+        email.content_subtype = "html"
+        email.send()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'New verification code sent to your email.'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': 'Failed to send new verification code. Please try again.'
+        }, status=500)
+    
 from django.http import JsonResponse
 
 def rate_limit_view(request, exception):
