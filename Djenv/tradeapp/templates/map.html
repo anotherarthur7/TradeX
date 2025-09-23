@@ -1,0 +1,29 @@
+
+
+{% extends "base.html" %}
+
+{% block content %}
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Quick start. Placing an interactive map on a page</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=bab1140d-7827-4237-8a9f-1d136d5f51a6&lang=en_US" type="text/javascript">
+    </script>
+    <script type="text/javascript">
+        ymaps.ready(init);
+        function init(){ 
+            var myMap = new ymaps.Map("map", {
+                center: [55.76, 37.64],
+                zoom: 7
+            });
+         }
+    </script>
+</head>
+
+<body>
+    <div id="map" style="width: 1125px; height: 725px"></div>
+</body>
+
+</html>
+{% endblock %}

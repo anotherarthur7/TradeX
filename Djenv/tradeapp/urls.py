@@ -40,4 +40,5 @@ urlpatterns = [
     path('request-password-reset/', request_password_reset, name='request_password_reset'),
     path('verify-password-reset/', verify_password_reset, name='verify_password_reset'),
     path('resend-reset-code/', resend_reset_code, name='resend_reset_code'),
+    path('map', views.map, name='map'),
 ]

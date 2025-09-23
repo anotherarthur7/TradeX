@@ -243,6 +243,9 @@ def message_delete(request, message_id):
 def home(request):
     return render(request, 'home.html', {'is_home': True})
 
+def map(request):
+    return render(request, 'map.html')
+
 @ratelimit(key='ip', rate='5/m')
 def about(request):
 	return render(request, "about.html")

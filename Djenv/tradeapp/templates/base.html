@@ -55,6 +55,12 @@
                 <span class="sidebar-text">About</span>
             </a>
         </div>
+        <div class="sidebar-item">
+            <a href="/map">
+                <span role="img" aria-label="About">🗺️</span>
+                <span class="sidebar-text">Map</span>
+            </a>
+        </div>
         {% if user.is_authenticated %}
             <div class="sidebar-item">
                 <a href="{% url 'profile' %}">
@@ -92,6 +98,7 @@
                 <span class="sidebar-text">View Reports</span>
             </a>
         </div>
+        
     {% endif %}
     </div>
 
