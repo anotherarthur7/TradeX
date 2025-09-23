@@ -40,6 +40,28 @@
             {% endif %}
         </div>
 
+        <!-- Location Selection Section -->
+        <div class="form-group">
+            <label for="location-section" style="font-weight: bold; margin-bottom: 10px; display: block;">Location:</label>
+            <div id="location-section">
+                <button type="button" id="select-location-btn" class="custom-button" style="background: #28a745;">
+                    📍 Select Location on Map
+                </button>
+                <div id="location-info" style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; display: none;">
+                    <p><strong>Selected Location:</strong></p>
+                    <p id="coordinates-display">No location selected</p>
+                    <p id="address-display"></p>
+                    <button type="button" id="clear-location-btn" class="custom-button" style="background: #dc3545; margin-top: 5px;">
+                        Clear Location
+                    </button>
+                </div>
+            </div>
+            <!-- Hidden fields to store coordinates -->
+            <input type="hidden" name="latitude" id="latitude">
+            <input type="hidden" name="longitude" id="longitude">
+            <input type="hidden" name="address" id="address">
+        </div>
+
         <div class="button-container">
             <button type="submit" name="save" class="custom-button">Create new</button>
         </div>
@@ -53,7 +75,16 @@
     document.addEventListener("DOMContentLoaded", function () {
         const fileInput = document.querySelector('.custom-file-input input[type="file"]');
         const fileInputText = document.querySelector('.file-input-text');
+        const selectLocationBtn = document.getElementById('select-location-btn');
+        const clearLocationBtn = document.getElementById('clear-location-btn');
+        const locationInfo = document.getElementById('location-info');
+        const coordinatesDisplay = document.getElementById('coordinates-display');
+        const addressDisplay = document.getElementById('address-display');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const addressInput = document.getElementById('address');
 
+        // File input handling
         fileInput.addEventListener("change", function () {
             if (fileInput.files.length > 0) {
                 fileInputText.textContent = fileInput.files[0].name;
@@ -62,12 +93,58 @@
             }
         });
 
-        // Check if the form was submitted successfully
+        // Location selection button
+        selectLocationBtn.addEventListener('click', function() {
+            // Open map in a new window/tab
+            const mapWindow = window.open('{% url "map" %}?source=create', 'mapWindow', 'width=1200,height=800');
+            
+            // Listen for messages from the map window
+            window.addEventListener('message', function(event) {
+                if (event.origin !== window.location.origin) return;
+                
+                if (event.data.type === 'locationSelected') {
+                    const { latitude, longitude, address } = event.data;
+                    
+                    // Update hidden inputs
+                    latitudeInput.value = latitude;
+                    longitudeInput.value = longitude;
+                    addressInput.value = address;
+                    
+                    // Update display
+                    coordinatesDisplay.textContent = `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`;
+                    addressDisplay.textContent = `Address: ${address}`;
+                    
+                    // Show location info
+                    locationInfo.style.display = 'block';
+                    
+                    // Close the map window
+                    if (mapWindow) mapWindow.close();
+                }
+            });
+        });
+
+        // Clear location button
+        clearLocationBtn.addEventListener('click', function() {
+            latitudeInput.value = '';
+            longitudeInput.value = '';
+            addressInput.value = '';
+            coordinatesDisplay.textContent = 'No location selected';
+            addressDisplay.textContent = '';
+            locationInfo.style.display = 'none';
+        });
+
+        // Check if there's existing location data (for edit scenarios)
+        if (latitudeInput.value && longitudeInput.value) {
+            coordinatesDisplay.textContent = `Latitude: ${parseFloat(latitudeInput.value).toFixed(6)}, Longitude: ${parseFloat(longitudeInput.value).toFixed(6)}`;
+            addressDisplay.textContent = `Address: ${addressInput.value}`;
+            locationInfo.style.display = 'block';
+        }
+
+        // Form submission handling
         const form = document.getElementById('offer-form');
         form.addEventListener('submit', function (event) {
-            event.preventDefault(); // Prevent default form submission
+            event.preventDefault();
 
-            // Submit the form via AJAX
             const formData = new FormData(form);
 
             fetch('{% url 'create' %}', {
@@ -80,21 +157,31 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Show SweetAlert pop-up
                     Swal.fire({
                         title: 'Offer Submitted!',
                         text: 'Your offer is pending now until admin checks it.',
                         icon: 'success',
                         confirmButtonText: 'OK'
                     }).then(() => {
-                        // Redirect to home page after the user clicks "OK"
                         window.location.href = '{% url 'home' %}';
                     });
                 } else {
                     // Handle form errors
+                    let errorMessage = 'There was an error submitting your offer.';
+                    if (data.errors) {
+                        // Format Django form errors
+                        const errors = [];
+                        for (const field in data.errors) {
+                            data.errors[field].forEach(error => {
+                                errors.push(error.message);
+                            });
+                        }
+                        errorMessage = errors.join('\n');
+                    }
+                    
                     Swal.fire({
                         title: 'Error!',
-                        text: 'There was an error submitting your offer. Please try again.',
+                        text: errorMessage,
                         icon: 'error',
                         confirmButtonText: 'OK'
                     });

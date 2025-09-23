@@ -37,12 +37,27 @@ class OfferForm(forms.ModelForm):
     )
     image = forms.ImageField(
         label="Image",
+        required=False,  # Make image optional
         widget=forms.FileInput(attrs={'class': 'custom-form-control'})
+    )
+    
+    # Add coordinate fields as hidden fields
+    latitude = forms.FloatField(
+        required=False,
+        widget=forms.HiddenInput(attrs={'id': 'latitude'})
+    )
+    longitude = forms.FloatField(
+        required=False,
+        widget=forms.HiddenInput(attrs={'id': 'longitude'})
+    )
+    address = forms.CharField(
+        required=False,
+        widget=forms.HiddenInput(attrs={'id': 'address'})
     )
 
     class Meta:
         model = Offer
-        fields = ['title', 'description', 'price', 'image']
+        fields = ['title', 'description', 'price', 'image', 'latitude', 'longitude', 'address']
 
     def clean_price(self):
         # Get the price value from the form data
@@ -54,6 +69,31 @@ class OfferForm(forms.ModelForm):
 
         # Return the cleaned price
         return price
+    
+    def clean_latitude(self):
+        latitude = self.cleaned_data.get('latitude')
+        if latitude is not None:
+            if latitude < -90 or latitude > 90:
+                raise ValidationError("Latitude must be between -90 and 90 degrees.")
+        return latitude
+    
+    def clean_longitude(self):
+        longitude = self.cleaned_data.get('longitude')
+        if longitude is not None:
+            if longitude < -180 or longitude > 180:
+                raise ValidationError("Longitude must be between -180 and 180 degrees.")
+        return longitude
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        latitude = cleaned_data.get('latitude')
+        longitude = cleaned_data.get('longitude')
+        
+        # If one coordinate is provided, the other must also be provided
+        if (latitude is not None and longitude is None) or (longitude is not None and latitude is None):
+            raise ValidationError("Both latitude and longitude must be provided together.")
+        
+        return cleaned_data
     
 class CustomPasswordChangeForm(PasswordChangeForm):
     def clean_new_password1(self):

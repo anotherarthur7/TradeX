@@ -3,9 +3,8 @@ from . import views
 from .views import resend_verification
 from .views import request_password_reset, verify_password_reset, resend_reset_code
 
-
 urlpatterns = [
-	path("", views.home, name="home"),
+    path("", views.home, name="home"),
     path('register', views.register, name='register'),
     path('logout', views.logout_view, name='logout'),
     path('login', views.login_view, name='login'),
@@ -40,5 +39,5 @@ urlpatterns = [
     path('request-password-reset/', request_password_reset, name='request_password_reset'),
     path('verify-password-reset/', verify_password_reset, name='verify_password_reset'),
     path('resend-reset-code/', resend_reset_code, name='resend_reset_code'),
-    path('map', views.map, name='map'),
+    path('map/', views.map, name='map'),  # Add this line
 ]

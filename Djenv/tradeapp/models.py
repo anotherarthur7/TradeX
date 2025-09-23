@@ -23,6 +23,9 @@ class Offer(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE) 
     is_open = models.BooleanField(default=True) 
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending') 
+    latitude = models.FloatField(null=True, blank=True)
+    longitude = models.FloatField(null=True, blank=True)
+    address = models.CharField(max_length=255, blank=True, null=True)
     def __str__(self):
         return self.title
 

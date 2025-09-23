@@ -259,6 +259,20 @@ def offermain(request):
         offers = Offer.objects.filter(is_open=True)
     return render(request, "offermain.html", {"offers": offers, "show_closed": show_closed})
 
+def map(request):
+    offer_id = request.GET.get('offer_id')
+    offer = None
+    
+    if offer_id:
+        try:
+            offer = Offer.objects.get(id=offer_id)
+        except Offer.DoesNotExist:
+            pass
+    
+    return render(request, 'map.html', {
+        'offer': offer,
+    })
+
 @ratelimit(key='ip', rate='10/m')
 def itemIndex(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
@@ -289,6 +303,17 @@ def create(request):
             offer = form.save(commit=False)
             offer.user = request.user
             offer.status = 'pending'
+            
+            # Get coordinates from form data
+            latitude = request.POST.get('latitude')
+            longitude = request.POST.get('longitude')
+            address = request.POST.get('address')
+            
+            if latitude and longitude:
+                offer.latitude = float(latitude)
+                offer.longitude = float(longitude)
+                offer.address = address
+            
             offer.save()
             messages.success(request, 'Your offer has been submitted and is pending approval.')
             return JsonResponse({'success': True})
@@ -298,7 +323,19 @@ def create(request):
             return JsonResponse({'success': False, 'errors': errors}, status=400)
     else:
         form = OfferForm()
-    return render(request, 'create.html', {'form': form})
+        
+        # Check if there are coordinates in session (fallback method)
+        latitude = request.session.pop('selected_latitude', None)
+        longitude = request.session.pop('selected_longitude', None)
+        address = request.session.pop('selected_address', None)
+        
+    return render(request, 'create.html', {
+        'form': form,
+    })
+
+# Add map view
+def map(request):
+    return render(request, 'map.html')
 
 @ratelimit(key='ip', rate='10/m')
 def login_view(request):
@@ -362,6 +399,17 @@ def edit_offer(request, req_id):
     if request.method == 'POST':
         form = OfferForm(request.POST, request.FILES, instance=offer)
         if form.is_valid():
+            # Get coordinates from form data
+            latitude = request.POST.get('latitude')
+            longitude = request.POST.get('longitude')
+            address = request.POST.get('address')
+            
+            # Update coordinates if provided
+            if latitude and longitude:
+                offer.latitude = float(latitude)
+                offer.longitude = float(longitude)
+                offer.address = address
+            
             # Save the form data
             form.save()
             # Set the status to 'pending' after editing

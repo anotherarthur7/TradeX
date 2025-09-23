@@ -8,7 +8,7 @@
     <br>
     <p><strong>Note:</strong> Editing this offer will change its status to "Pending" until it is reviewed by an admin.</p>
     <br>
-    <form method="POST" action="{% url 'edit_offer' offer.id %}" enctype="multipart/form-data">
+    <form method="POST" action="{% url 'edit_offer' offer.id %}" enctype="multipart/form-data" id="offer-form">
         {% csrf_token %}
 
         <div class="form-group">
@@ -32,17 +32,251 @@
             {% endif %}
         </div>
         <br>
-        <div class="form-group">
-            <label for="{{ form.image.id_for_label }}">{{ form.image.label }}</label>
-            {{ form.image }}
+        <div class="form-group file-input-group">
+            <div class="custom-file-input">
+                <input type="file" name="{{ form.image.name }}" id="{{ form.image.id_for_label }}" accept="image/*">
+                <span class="file-input-text">
+                    {% if offer.image %}
+                        Current: {{ offer.image.name|slice:"7:" }}
+                    {% else %}
+                        Provide your image
+                    {% endif %}
+                </span>
+                <button type="button" class="custom-file-button">Choose File</button>
+            </div>
             {% if form.image.errors %}
                 <div class="form-error">{{ form.image.errors|striptags }}</div>
             {% endif %}
+            {% if offer.image %}
+                <div style="margin-top: 5px;">
+                    <img src="{{ offer.image.url }}" alt="Current offer image" style="max-width: 200px; max-height: 200px;">
+                </div>
+            {% endif %}
         </div>
         <br>
+
+        <!-- Location Selection Section -->
+        <div class="form-group">
+            <label for="location-section" style="font-weight: bold; margin-bottom: 10px; display: block;">Location:</label>
+            <div id="location-section">
+                <button type="button" id="select-location-btn" class="custom-button" style="background: #28a745;">
+                    📍 {% if offer.latitude and offer.longitude %}Change Location on Map{% else %}Select Location on Map{% endif %}
+                </button>
+                <div id="location-info" style="margin-top: 10px; padding: 10px; background: #f8f9fa; border-radius: 5px; {% if not offer.latitude or not offer.longitude %}display: none;{% endif %}">
+                    <p><strong>Selected Location:</strong></p>
+                    <p id="coordinates-display">
+                        {% if offer.latitude and offer.longitude %}
+                            Latitude: {{ offer.latitude|floatformat:6 }}, Longitude: {{ offer.longitude|floatformat:6 }}
+                        {% else %}
+                            No location selected
+                        {% endif %}
+                    </p>
+                    <p id="address-display">
+                        {% if offer.address %}
+                            Address: {{ offer.address }}
+                        {% endif %}
+                    </p>
+                    <button type="button" id="clear-location-btn" class="custom-button" style="background: #dc3545; margin-top: 5px;">
+                        Clear Location
+                    </button>
+                </div>
+            </div>
+            <!-- Hidden fields to store coordinates -->
+            <input type="hidden" name="latitude" id="latitude" value="{{ offer.latitude|default:'' }}">
+            <input type="hidden" name="longitude" id="longitude" value="{{ offer.longitude|default:'' }}">
+            <input type="hidden" name="address" id="address" value="{{ offer.address|default:'' }}">
+        </div>
+        <br>
+
+        <!-- Map Preview for Existing Location -->
+        {% if offer.latitude and offer.longitude %}
+        <div class="form-group">
+            <label style="font-weight: bold; margin-bottom: 10px; display: block;">Current Location Preview:</label>
+            <div id="map-preview" style="height: 300px; border: 2px solid #ddd; border-radius: 5px; margin-bottom: 15px;"></div>
+        </div>
+        {% endif %}
 
         <button type="submit" name="save" class="custom-button">Save Changes</button>
         <a href="{% url 'item_index' offer.id %}" class="custom-button cancel-button">Cancel</a>
     </form>
 </div>
+
+<!-- Include SweetAlert2 Library -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const fileInput = document.querySelector('.custom-file-input input[type="file"]');
+        const fileInputText = document.querySelector('.file-input-text');
+        const selectLocationBtn = document.getElementById('select-location-btn');
+        const clearLocationBtn = document.getElementById('clear-location-btn');
+        const locationInfo = document.getElementById('location-info');
+        const coordinatesDisplay = document.getElementById('coordinates-display');
+        const addressDisplay = document.getElementById('address-display');
+        const latitudeInput = document.getElementById('latitude');
+        const longitudeInput = document.getElementById('longitude');
+        const addressInput = document.getElementById('address');
+
+        // File input handling
+        fileInput.addEventListener("change", function () {
+            if (fileInput.files.length > 0) {
+                fileInputText.textContent = fileInput.files[0].name;
+            } else {
+                fileInputText.textContent = "{% if offer.image %}Current: {{ offer.image.name|slice:'7:' }}{% else %}Provide your image{% endif %}";
+            }
+        });
+
+        // Location selection button
+        selectLocationBtn.addEventListener('click', function() {
+            // Open map in a new window/tab with current coordinates if available
+            const currentLat = latitudeInput.value;
+            const currentLng = longitudeInput.value;
+            let mapUrl = '{% url "map" %}?source=edit&offer_id={{ offer.id }}';
+            
+            if (currentLat && currentLng) {
+                mapUrl += `&lat=${currentLat}&lng=${currentLng}`;
+            }
+            
+            const mapWindow = window.open(mapUrl, 'mapWindow', 'width=1200,height=800');
+            
+            // Listen for messages from the map window
+            window.addEventListener('message', function(event) {
+                if (event.origin !== window.location.origin) return;
+                
+                if (event.data.type === 'locationSelected') {
+                    const { latitude, longitude, address } = event.data;
+                    
+                    // Update hidden inputs
+                    latitudeInput.value = latitude;
+                    longitudeInput.value = longitude;
+                    addressInput.value = address;
+                    
+                    // Update display
+                    coordinatesDisplay.textContent = `Latitude: ${latitude.toFixed(6)}, Longitude: ${longitude.toFixed(6)}`;
+                    addressDisplay.textContent = `Address: ${address}`;
+                    
+                    // Show location info
+                    locationInfo.style.display = 'block';
+                    
+                    // Update the button text
+                    selectLocationBtn.textContent = '📍 Change Location on Map';
+                    
+                    // Close the map window
+                    if (mapWindow) mapWindow.close();
+                    
+                    // Refresh map preview if it exists
+                    if (window.mapPreview) {
+                        initMapPreview(latitude, longitude);
+                    }
+                }
+            });
+        });
+
+        // Clear location button
+        clearLocationBtn.addEventListener('click', function() {
+            latitudeInput.value = '';
+            longitudeInput.value = '';
+            addressInput.value = '';
+            coordinatesDisplay.textContent = 'No location selected';
+            addressDisplay.textContent = '';
+            locationInfo.style.display = 'none';
+            selectLocationBtn.textContent = '📍 Select Location on Map';
+            
+            // Remove map preview if it exists
+            const mapPreview = document.getElementById('map-preview');
+            if (mapPreview) {
+                mapPreview.innerHTML = '';
+            }
+        });
+
+        // Form submission handling with SweetAlert
+        const form = document.getElementById('offer-form');
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+
+            fetch('{% url 'edit_offer' offer.id %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        title: 'Offer Updated!',
+                        text: 'Your offer has been updated and is pending admin approval.',
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        window.location.href = '{% url 'item_index' offer.id %}';
+                    });
+                } else {
+                    let errorMessage = 'There was an error updating your offer.';
+                    if (data.errors) {
+                        const errors = [];
+                        for (const field in data.errors) {
+                            data.errors[field].forEach(error => {
+                                errors.push(error.message);
+                            });
+                        }
+                        errorMessage = errors.join('\n');
+                    }
+                    
+                    Swal.fire({
+                        title: 'Error!',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'An unexpected error occurred. Please try again.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            });
+        });
+    });
+</script>
+
+<!-- Map Preview Script for Existing Location -->
+{% if offer.latitude and offer.longitude %}
+<script src="https://api-maps.yandex.ru/2.1/?apikey=bab1140d-7827-4237-8a9f-1d136d5f51a6&lang=en_US"></script>
+<script>
+    function initMapPreview(lat, lng) {
+        const latitude = lat || {{ offer.latitude }};
+        const longitude = lng || {{ offer.longitude }};
+        
+        ymaps.ready(function() {
+            const map = new ymaps.Map('map-preview', {
+                center: [latitude, longitude],
+                zoom: 15
+            });
+            
+            const placemark = new ymaps.Placemark([latitude, longitude], {
+                balloonContent: '{{ offer.title|escapejs }}'
+            }, {
+                preset: 'islands#icon',
+                iconColor: '#0095b6'
+            });
+            
+            map.geoObjects.add(placemark);
+            window.mapPreview = map;
+        });
+    }
+    
+    // Initialize map preview when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        initMapPreview();
+    });
+</script>
+{% endif %}
 {% endblock %}

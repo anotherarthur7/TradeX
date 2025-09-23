@@ -14,6 +14,20 @@
             <li><p>DESCRIPTION: {{ offer.description }}</p></li>
             <li><p>COST: ${{ offer.price }}</p></li>
             <li><p>DATE: {{ offer.posted_date }}</p></li>
+            {% if offer.latitude and offer.longitude %}
+            <li>
+                <p>LOCATION: 
+                    <a href="{% url 'map' %}?offer_id={{ offer.id }}&view=1&lat={{ offer.latitude }}&lng={{ offer.longitude }}" 
+                       class="location-link" 
+                       target="_blank">
+                       📍 View on Map
+                    </a>
+                    {% if offer.address %}
+                        <br><small style="color: #666;">{{ offer.address }}</small>
+                    {% endif %}
+                </p>
+            </li>
+            {% endif %}
         </ul>
 
         <!-- Link to the associated thread -->
@@ -34,6 +48,25 @@
     </div>
 </div>
 
+<!-- Map Preview Section -->
+{% if offer.latitude and offer.longitude %}
+<div class="map-preview-container">
+    <h3>Offer Location</h3>
+    <div id="offer-map" style="height: 400px; width: 100%; border: 2px solid #ddd; border-radius: 8px; margin-bottom: 20px;"></div>
+    <div class="location-details">
+        <p><strong>Coordinates:</strong> {{ offer.latitude|floatformat:6 }}, {{ offer.longitude|floatformat:6 }}</p>
+        {% if offer.address %}
+            <p><strong>Address:</strong> {{ offer.address }}</p>
+        {% endif %}
+        <a href="{% url 'map' %}?offer_id={{ offer.id }}&view=1&lat={{ offer.latitude }}&lng={{ offer.longitude }}" 
+           class="btn btn-primary" 
+           target="_blank">
+           Open in Full Map
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <!-- Delete Offer Button (Outside the Container) -->
 <div class="delete-button-container">
     {% if is_author or is_admin %}
@@ -43,27 +76,123 @@
         </form>
     {% endif %}
 </div>
+
 <style>
     /* Center the delete button container */
-.delete-button-container {
-    text-align: center; /* Center the button horizontally */
-    margin-top: 20px; /* Add some space above the button */
-}
+    .delete-button-container {
+        text-align: center; /* Center the button horizontally */
+        margin-top: 20px; /* Add some space above the button */
+    }
 
-/* Style the delete button */
-.delete-button-container .btn-danger {
-    padding: 10px 20px; /* Add padding for better appearance */
-    font-size: 16px; /* Increase font size */
-    background-color: #dc3545; /* Red background color */
-    border: none; /* Remove border */
-    border-radius: 5px; /* Add rounded corners */
-    color: white; /* White text color */
-    cursor: pointer; /* Change cursor to pointer on hover */
-}
+    /* Style the delete button */
+    .delete-button-container .btn-danger {
+        padding: 10px 20px; /* Add padding for better appearance */
+        font-size: 16px; /* Increase font size */
+        background-color: #dc3545; /* Red background color */
+        border: none; /* Remove border */
+        border-radius: 5px; /* Add rounded corners */
+        color: white; /* White text color */
+        cursor: pointer; /* Change cursor to pointer on hover */
+    }
 
-/* Hover effect for the delete button */
-.delete-button-container .btn-danger:hover {
-    background-color: #c82333; /* Darker red on hover */
-}
+    /* Hover effect for the delete button */
+    .delete-button-container .btn-danger:hover {
+        background-color: #c82333; /* Darker red on hover */
+    }
+
+    /* Map preview container styling */
+    .map-preview-container {
+        margin: 30px 0;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+    }
+
+    .map-preview-container h3 {
+        margin-bottom: 15px;
+        color: #333;
+    }
+
+    .location-details {
+        margin-top: 15px;
+        padding: 15px;
+        background-color: white;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+
+    .location-details p {
+        margin: 5px 0;
+    }
+
+    .location-link {
+        color: #007bff;
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .location-link:hover {
+        text-decoration: underline;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        padding: 8px 16px;
+        text-decoration: none;
+        border-radius: 4px;
+        display: inline-block;
+        margin-top: 10px;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
 </style>
+
+<!-- Yandex Maps API for map preview -->
+{% if offer.latitude and offer.longitude %}
+<script src="https://api-maps.yandex.ru/2.1/?apikey=bab1140d-7827-4237-8a9f-1d136d5f51a6&lang=en_US"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        ymaps.ready(initMap);
+        
+        function initMap() {
+            var offerMap = new ymaps.Map('offer-map', {
+                center: [{{ offer.latitude }}, {{ offer.longitude }}],
+                zoom: 14,
+                controls: ['zoomControl', 'fullscreenControl']
+            });
+            
+            var offerPlacemark = new ymaps.Placemark([{{ offer.latitude }}, {{ offer.longitude }}], {
+                balloonContent: `
+                    <strong>{{ offer.title|escapejs }}</strong><br>
+                    {{ offer.description|truncatewords:20|escapejs }}<br>
+                    <strong>Price:</strong> ${{ offer.price }}<br>
+                    {% if offer.address %}
+                        <strong>Address:</strong> {{ offer.address|escapejs }}
+                    {% endif %}
+                `
+            }, {
+                preset: 'islands#blueShoppingIcon',
+                balloonCloseButton: true,
+                hideIconOnBalloonOpen: false
+            });
+            
+            offerMap.geoObjects.add(offerPlacemark);
+            
+            // Open balloon automatically
+            offerPlacemark.balloon.open();
+            
+            // Add behavior to close balloon when clicking on map
+            offerMap.events.add('click', function() {
+                offerPlacemark.balloon.close();
+            });
+        }
+    });
+</script>
+{% endif %}
 {% endblock %}

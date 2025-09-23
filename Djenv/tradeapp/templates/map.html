@@ -1,29 +1,288 @@
-
-
 {% extends "base.html" %}
 
 {% block content %}
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Quick start. Placing an interactive map on a page</title>
+    <title>Select Location for Offer</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=bab1140d-7827-4237-8a9f-1d136d5f51a6&lang=en_US" type="text/javascript">
-    </script>
-    <script type="text/javascript">
-        ymaps.ready(init);
-        function init(){ 
-            var myMap = new ymaps.Map("map", {
-                center: [55.76, 37.64],
-                zoom: 7
-            });
-         }
-    </script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=bab1140d-7827-4237-8a9f-1d136d5f51a6&lang=en_US" type="text/javascript"></script>
+    <style>
+        .map-container {
+            margin: 20px 0;
+            padding: 20px;
+        }
+        #map {
+            width: 100%; 
+            height: 600px;
+            margin-bottom: 20px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        .coordinates-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-success {
+            background: #28a745;
+        }
+        .btn-danger {
+            background: #dc3545;
+        }
+        .btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        .view-mode .coordinates-info,
+        .view-mode #save-btn,
+        .view-mode #clear-btn {
+            display: none;
+        }
+    </style>
 </head>
 
 <body>
-    <div id="map" style="width: 1125px; height: 725px"></div>
-</body>
+    <div class="map-container" id="map-container">
+        <h2 id="map-title">Select Offer Location</h2>
+        
+        <div class="coordinates-info" id="coordinates-info">
+            <p><strong>Instructions:</strong> Click on the map to select a location for your offer.</p>
+            <div id="coordinates-display">
+                <p>Selected Coordinates: <span id="coords-text">None selected</span></p>
+                <p>Address: <span id="address-text">-</span></p>
+            </div>
+        </div>
+        
+        <div id="map"></div>
+        
+        <div id="button-container">
+            <button id="save-btn" class="btn btn-success" disabled>Use This Location</button>
+            <button id="clear-btn" class="btn btn-danger" disabled>Clear Selection</button>
+            <button id="cancel-btn" class="btn">Cancel</button>
+        </div>
+    </div>
 
+    <script type="text/javascript">
+        ymaps.ready(init);
+        
+        let myMap;
+        let selectedPlacemark = null;
+        let selectedCoordinates = null;
+        let selectedAddress = null;
+        let isViewMode = false;
+        
+        function init(){ 
+            // Get URL parameters once
+            const urlParams = new URLSearchParams(window.location.search);
+            const viewMode = urlParams.get('view');
+            const offerId = urlParams.get('offer_id');
+            const viewLat = urlParams.get('lat');
+            const viewLng = urlParams.get('lng');
+            const source = urlParams.get('source');
+            const initialLat = urlParams.get('lat'); // Same as viewLat
+            const initialLng = urlParams.get('lng'); // Same as viewLng
+
+            // Check if we're in view mode for a specific offer
+            if (viewMode === '1' && viewLat && viewLng) {
+                isViewMode = true;
+                setupViewMode(viewLat, viewLng);
+            } 
+            // Check if we have initial coordinates from URL parameters (for editing)
+            else if (initialLat && initialLng) {
+                setupEditMode(initialLat, initialLng);
+            }
+            // Default mode (create new offer)
+            else {
+                setupCreateMode();
+            }
+        }
+        
+        function setupCreateMode() {
+            myMap = new ymaps.Map("map", {
+                center: [55.76, 37.64],
+                zoom: 7
+            });
+            
+            setupMapInteractions();
+        }
+        
+        function setupEditMode(lat, lng) {
+            myMap = new ymaps.Map("map", {
+                center: [parseFloat(lat), parseFloat(lng)],
+                zoom: 15
+            });
+            
+            // Add existing location marker
+            selectedPlacemark = new ymaps.Placemark([lat, lng], {
+                balloonContent: 'Current offer location'
+            }, {
+                preset: 'islands#icon',
+                iconColor: '#ff0000'
+            });
+            
+            myMap.geoObjects.add(selectedPlacemark);
+            selectedCoordinates = [parseFloat(lat), parseFloat(lng)];
+            
+            // Get address for existing location
+            ymaps.geocode(selectedCoordinates).then(function (res) {
+                var firstGeoObject = res.geoObjects.get(0);
+                selectedAddress = firstGeoObject.getAddressLine();
+                document.getElementById('address-text').textContent = selectedAddress;
+            });
+            
+            document.getElementById('coords-text').textContent = 
+                lat + ', ' + lng;
+            
+            document.getElementById('save-btn').disabled = false;
+            document.getElementById('clear-btn').disabled = false;
+            
+            setupMapInteractions();
+        }
+        
+        function setupViewMode(lat, lng) {
+            myMap = new ymaps.Map("map", {
+                center: [parseFloat(lat), parseFloat(lng)],
+                zoom: 15,
+                controls: ['zoomControl', 'fullscreenControl']
+            });
+            
+            // Add offer marker
+            const offerPlacemark = new ymaps.Placemark([lat, lng], {
+                balloonContent: 'Offer Location<br><strong>View only mode</strong>'
+            }, {
+                preset: 'islands#blueShoppingIcon',
+                draggable: false
+            });
+            
+            myMap.geoObjects.add(offerPlacemark);
+            
+            // Disable map clicks in view mode
+            myMap.events.remove('click');
+            
+            // Update UI for view mode
+            document.getElementById('map-title').textContent = 'Offer Location';
+            document.getElementById('save-btn').style.display = 'none';
+            document.getElementById('clear-btn').style.display = 'none';
+            document.getElementById('coordinates-info').style.display = 'none';
+            
+            // Change cancel button to close button
+            const cancelBtn = document.getElementById('cancel-btn');
+            if (cancelBtn) {
+                cancelBtn.textContent = 'Close Map';
+                cancelBtn.onclick = function() {
+                    window.close();
+                };
+            }
+            
+            // Add class for view mode styling
+            document.getElementById('map-container').classList.add('view-mode');
+        }
+        
+        function setupMapInteractions() {
+            // Add click event to the map (only in edit/create modes)
+            myMap.events.add('click', function (e) {
+                if (isViewMode) return; // Don't allow clicks in view mode
+                
+                var coords = e.get('coords');
+                
+                // Remove previous placemark if exists
+                if (selectedPlacemark) {
+                    myMap.geoObjects.remove(selectedPlacemark);
+                }
+                
+                // Create a new placemark
+                selectedPlacemark = new ymaps.Placemark(coords, {
+                    balloonContent: 'Selected location for your offer'
+                }, {
+                    preset: 'islands#icon',
+                    iconColor: '#0095b6'
+                });
+                
+                // Add placemark to the map
+                myMap.geoObjects.add(selectedPlacemark);
+                selectedCoordinates = coords;
+                
+                // Update coordinates display
+                document.getElementById('coords-text').textContent = 
+                    coords[0].toFixed(6) + ', ' + coords[1].toFixed(6);
+                
+                // Get address using reverse geocoding
+                ymaps.geocode(coords).then(function (res) {
+                    var firstGeoObject = res.geoObjects.get(0);
+                    selectedAddress = firstGeoObject.getAddressLine();
+                    document.getElementById('address-text').textContent = selectedAddress;
+                });
+                
+                // Enable buttons
+                document.getElementById('save-btn').disabled = false;
+                document.getElementById('clear-btn').disabled = false;
+            });
+            
+            // Use selected location
+            document.getElementById('save-btn').addEventListener('click', function() {
+                if (selectedCoordinates) {
+                    // Send coordinates back to the parent window (create form)
+                    if (window.opener) {
+                        window.opener.postMessage({
+                            type: 'locationSelected',
+                            latitude: selectedCoordinates[0],
+                            longitude: selectedCoordinates[1],
+                            address: selectedAddress || 'Address not available'
+                        }, window.location.origin);
+                        
+                        window.close();
+                    } else {
+                        // Fallback: store in sessionStorage and redirect back
+                        sessionStorage.setItem('selectedLatitude', selectedCoordinates[0]);
+                        sessionStorage.setItem('selectedLongitude', selectedCoordinates[1]);
+                        sessionStorage.setItem('selectedAddress', selectedAddress);
+                        
+                        // Check if we came from create form
+                        const urlParams = new URLSearchParams(window.location.search);
+                        if (urlParams.get('source') === 'create') {
+                            window.location.href = "{% url 'create' %}";
+                        } else {
+                            window.history.back();
+                        }
+                    }
+                }
+            });
+            
+            // Clear selection
+            document.getElementById('clear-btn').addEventListener('click', function() {
+                if (selectedPlacemark) {
+                    myMap.geoObjects.remove(selectedPlacemark);
+                    selectedPlacemark = null;
+                    selectedCoordinates = null;
+                    selectedAddress = null;
+                    
+                    document.getElementById('coords-text').textContent = 'None selected';
+                    document.getElementById('address-text').textContent = '-';
+                    
+                    document.getElementById('save-btn').disabled = true;
+                    document.getElementById('clear-btn').disabled = true;
+                }
+            });
+            
+            // Cancel button
+            document.getElementById('cancel-btn').addEventListener('click', function() {
+                window.close();
+            });
+        }
+    </script>
+</body>
 </html>
 {% endblock %}
