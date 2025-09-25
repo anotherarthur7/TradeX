@@ -260,17 +260,21 @@ def offermain(request):
     return render(request, "offermain.html", {"offers": offers, "show_closed": show_closed})
 
 def map(request):
-    offer_id = request.GET.get('offer_id')
-    offer = None
+    # Get all approved offers with coordinates
+    offers = Offer.objects.filter(
+        status='approved',
+        latitude__isnull=False,
+        longitude__isnull=False
+    ).exclude(latitude=0).exclude(longitude=0).select_related('user')
     
-    if offer_id:
-        try:
-            offer = Offer.objects.get(id=offer_id)
-        except Offer.DoesNotExist:
-            pass
+    print(f"Map view: passing {len(offers)} offers to template")
+    
+    # Debug: print each offer's details
+    for offer in offers:
+        print(f"Offer: {offer.title}, Lat: {offer.latitude}, Lng: {offer.longitude}, User: {offer.user.username}")
     
     return render(request, 'map.html', {
-        'offer': offer,
+        'offers': offers,
     })
 
 @ratelimit(key='ip', rate='10/m')

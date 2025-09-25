@@ -4,13 +4,18 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-    <title>Select Location for Offer</title>
+    <title>{% if view_mode %}Offer Location{% else %}Select Location for Offer{% endif %}</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <script src="https://api-maps.yandex.ru/2.1/?apikey=bab1140d-7827-4237-8a9f-1d136d5f51a6&lang=en_US" type="text/javascript"></script>
     <style>
+        h1, h2{
+            color:black;
+        }
         .map-container {
+            color:black;
             margin: 20px 0;
             padding: 20px;
+            background-color: #978dc9;
         }
         #map {
             width: 100%; 
@@ -20,7 +25,8 @@
             border-radius: 5px;
         }
         .coordinates-info {
-            background: #f5f5f5;
+            color: black;
+            background: #978dc9;
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
@@ -42,6 +48,9 @@
         .btn-danger {
             background: #dc3545;
         }
+        .btn-info {
+            background: #17a2b8;
+        }
         .btn:disabled {
             background: #6c757d;
             cursor: not-allowed;
@@ -51,15 +60,19 @@
         .view-mode #clear-btn {
             display: none;
         }
+        p{
+            color:black;
+        }
     </style>
 </head>
 
 <body>
     <div class="map-container" id="map-container">
-        <h2 id="map-title">Select Offer Location</h2>
+        <h2 id="map-title">{% if view_mode %}Offer Location{% else %}Select Location for Offer{% endif %}</h2>
+        
         
         <div class="coordinates-info" id="coordinates-info">
-            <p><strong>Instructions:</strong> Click on the map to select a location for your offer.</p>
+            <p><strong>Instructions:</strong> {% if view_mode %}This is a read-only view of the offer location.{% else %}Click on the map to select a location for your offer.{% endif %}</p>
             <div id="coordinates-display">
                 <p>Selected Coordinates: <span id="coords-text">None selected</span></p>
                 <p>Address: <span id="address-text">-</span></p>
@@ -71,7 +84,10 @@
         <div id="button-container">
             <button id="save-btn" class="btn btn-success" disabled>Use This Location</button>
             <button id="clear-btn" class="btn btn-danger" disabled>Clear Selection</button>
-            <button id="cancel-btn" class="btn">Cancel</button>
+            {% if user.is_authenticated and not view_mode %}
+            <button id="view-all-btn" class="btn btn-info">View All Offers</button>
+            {% endif %}
+            <button id="cancel-btn" class="btn">{% if view_mode %}Close Map{% else %}Cancel{% endif %}</button>
         </div>
     </div>
 
@@ -83,46 +99,102 @@
         let selectedCoordinates = null;
         let selectedAddress = null;
         let isViewMode = false;
+        let allOfferPlacemarks = [];
+        let currentOfferFilter = 'all';
         
+        // Offer data passed from Django template - ALL approved offers
+        const offerData = [
+            {% for offer in offers %}
+            {
+                id: {{ offer.id }},
+                title: "{{ offer.title|escapejs }}",
+                description: "{{ offer.description|escapejs }}",
+                price: "{{ offer.price }}",
+                latitude: {{ offer.latitude|default:0 }},
+                longitude: {{ offer.longitude|default:0 }},
+                address: "{{ offer.address|default:''|escapejs }}",
+                is_open: {{ offer.is_open|yesno:"true,false" }},
+                is_my_offer: {% if user.is_authenticated and offer.user.id == user.id %}true{% else %}false{% endif %},
+                status: "{{ offer.status }}",
+                user: "{{ offer.user.username|escapejs }}",
+                posted_date: "{{ offer.posted_date|date:'Y-m-d' }}"
+            },
+            {% endfor %}
+        ].filter(offer => offer.latitude !== 0 && offer.longitude !== 0);
+
         function init(){ 
             // Get URL parameters once
             const urlParams = new URLSearchParams(window.location.search);
             const viewMode = urlParams.get('view');
-            const offerId = urlParams.get('offer_id');
             const viewLat = urlParams.get('lat');
             const viewLng = urlParams.get('lng');
             const source = urlParams.get('source');
-            const initialLat = urlParams.get('lat'); // Same as viewLat
-            const initialLng = urlParams.get('lng'); // Same as viewLng
+            const initialLat = urlParams.get('lat');
+
+            console.log('Map initialization started');
+            console.log('URL params:', {viewMode, viewLat, viewLng, source, initialLat});
+            console.log('Offer data count:', offerData.length);
+            console.log('User authenticated:', {{ user.is_authenticated|yesno:"true,false" }});
 
             // Check if we're in view mode for a specific offer
             if (viewMode === '1' && viewLat && viewLng) {
+                console.log('Setting up VIEW mode');
                 isViewMode = true;
                 setupViewMode(viewLat, viewLng);
             } 
             // Check if we have initial coordinates from URL parameters (for editing)
-            else if (initialLat && initialLng) {
-                setupEditMode(initialLat, initialLng);
+            else if (initialLat && viewLng) {
+                console.log('Setting up EDIT mode');
+                setupEditMode(initialLat, viewLng);
             }
-            // Default mode (create new offer)
+            // Default mode (create new offer or general view)
             else {
+                console.log('Setting up CREATE mode');
                 setupCreateMode();
             }
         }
         
         function setupCreateMode() {
+            const hasOffers = offerData.length > 0;
+            console.log('Create mode - has offers:', hasOffers);
+            
+            // Center map on first offer or default location
+            let center = [55.76, 37.64];
+            let zoom = 7;
+            
+            if (hasOffers) {
+                // Center map on the average of all offer locations
+                const avgLat = offerData.reduce((sum, offer) => sum + offer.latitude, 0) / offerData.length;
+                const avgLng = offerData.reduce((sum, offer) => sum + offer.longitude, 0) / offerData.length;
+                center = [avgLat, avgLng];
+                zoom = 10;
+                console.log('Centering on offers average:', center);
+            }
+            
             myMap = new ymaps.Map("map", {
-                center: [55.76, 37.64],
-                zoom: 7
+                center: center,
+                zoom: zoom,
+                controls: ['zoomControl', 'fullscreenControl']
             });
+            
+            // Show all offers if user is authenticated
+            if ({{ user.is_authenticated|yesno:"true,false" }} && hasOffers) {
+                console.log('Showing all offers in create mode');
+                showAllOffers(false); // false = not in view mode
+                setupOfferFilter();
+            } else {
+                console.log('Not showing offers - authenticated:', {{ user.is_authenticated|yesno:"true,false" }}, 'hasOffers:', hasOffers);
+            }
             
             setupMapInteractions();
         }
         
         function setupEditMode(lat, lng) {
+            console.log('Edit mode with coordinates:', lat, lng);
             myMap = new ymaps.Map("map", {
                 center: [parseFloat(lat), parseFloat(lng)],
-                zoom: 15
+                zoom: 15,
+                controls: ['zoomControl', 'fullscreenControl']
             });
             
             // Add existing location marker
@@ -143,33 +215,63 @@
                 document.getElementById('address-text').textContent = selectedAddress;
             });
             
-            document.getElementById('coords-text').textContent = 
-                lat + ', ' + lng;
-            
+            document.getElementById('coords-text').textContent = lat + ', ' + lng;
             document.getElementById('save-btn').disabled = false;
             document.getElementById('clear-btn').disabled = false;
+            
+            // Show other offers in the background
+            if ({{ user.is_authenticated|yesno:"true,false" }} && offerData.length > 0) {
+                console.log('Showing all offers in edit mode');
+                showAllOffers(false); // false = not in view mode
+                setupOfferFilter();
+            }
             
             setupMapInteractions();
         }
         
         function setupViewMode(lat, lng) {
+            console.log('View mode with coordinates:', lat, lng);
+            console.log('Total offers available:', offerData.length);
+            
             myMap = new ymaps.Map("map", {
                 center: [parseFloat(lat), parseFloat(lng)],
                 zoom: 15,
                 controls: ['zoomControl', 'fullscreenControl']
             });
             
-            // Add offer marker
+            // Highlight the specific offer we're viewing
+            const viewedOffer = offerData.find(offer => 
+                Math.abs(offer.latitude - parseFloat(lat)) < 0.0001 && 
+                Math.abs(offer.longitude - parseFloat(lng)) < 0.0001
+            );
+            
+            console.log('Viewed offer found:', viewedOffer);
+            
+            let offerContent = 'Offer Location<br><strong>View only mode</strong>';
+            if (viewedOffer) {
+                offerContent = `
+                    <strong>${viewedOffer.title}</strong><br>
+                    ${viewedOffer.description.length > 100 ? viewedOffer.description.substring(0, 100) + '...' : viewedOffer.description}<br>
+                    <strong>Price:</strong> $${viewedOffer.price}<br>
+                    <strong>User:</strong> ${viewedOffer.user}<br>
+                    <strong>Status:</strong> ${viewedOffer.is_open ? 'Open' : 'Closed'}<br>
+                    ${viewedOffer.address ? `<strong>Address:</strong> ${viewedOffer.address}<br>` : ''}
+                    <strong>📍 You are viewing this offer</strong>
+                `;
+            }
+            
+            // Add the viewed offer marker with special styling
             const offerPlacemark = new ymaps.Placemark([lat, lng], {
-                balloonContent: 'Offer Location<br><strong>View only mode</strong>'
+                balloonContent: offerContent
             }, {
-                preset: 'islands#blueShoppingIcon',
-                draggable: false
+                preset: 'islands#redIcon', // Red icon for the viewed offer
+                draggable: false,
+                balloonCloseButton: true
             });
             
             myMap.geoObjects.add(offerPlacemark);
             
-            // Disable map clicks in view mode
+            // Disable map clicks in view mode for location selection
             myMap.events.remove('click');
             
             // Update UI for view mode
@@ -177,6 +279,12 @@
             document.getElementById('save-btn').style.display = 'none';
             document.getElementById('clear-btn').style.display = 'none';
             document.getElementById('coordinates-info').style.display = 'none';
+            
+            // Hide the offers info section in view mode
+            const offersInfo = document.querySelector('.offers-info');
+            if (offersInfo) {
+                offersInfo.style.display = 'none';
+            }
             
             // Change cancel button to close button
             const cancelBtn = document.getElementById('cancel-btn');
@@ -187,8 +295,135 @@
                 };
             }
             
+            // Show ALL other offers in the background
+            if ({{ user.is_authenticated|yesno:"true,false" }} && offerData.length > 0) {
+                console.log('Showing all other offers in view mode');
+                showAllOffers(true, viewedOffer ? viewedOffer.id : null);
+            }
+            
             // Add class for view mode styling
             document.getElementById('map-container').classList.add('view-mode');
+        }
+        
+        function showAllOffers(isViewMode = false, excludeOfferId = null) {
+            console.log('showAllOffers called - isViewMode:', isViewMode, 'excludeOfferId:', excludeOfferId);
+            console.log('Total offers to process:', offerData.length);
+            
+            // Clear existing offer markers
+            allOfferPlacemarks.forEach(placemark => {
+                myMap.geoObjects.remove(placemark);
+            });
+            allOfferPlacemarks = [];
+            
+            // Filter offers based on current filter (except in view mode where we show all)
+            const filteredOffers = offerData.filter(offer => {
+                // If we're in view mode and this is the offer being viewed, skip it (it's already added)
+                if (isViewMode && excludeOfferId && offer.id === excludeOfferId) {
+                    console.log('Skipping viewed offer:', offer.id);
+                    return false;
+                }
+                
+                // Apply filter only if not in view mode
+                if (!isViewMode) {
+                    switch (currentOfferFilter) {
+                        case 'open':
+                            return offer.is_open;
+                        case 'my':
+                            return offer.is_my_offer;
+                        default:
+                            return true;
+                    }
+                }
+                return true; // In view mode, show all offers
+            });
+            
+            console.log('Filtered offers count:', filteredOffers.length);
+            
+            // Add markers for each offer
+            filteredOffers.forEach(offer => {
+                const offerContent = `
+                    <strong>${offer.title}</strong><br>
+                    ${offer.description.length > 100 ? offer.description.substring(0, 100) + '...' : offer.description}<br>
+                    <strong>Price:</strong> $${offer.price}<br>
+                    <strong>User:</strong> ${offer.user}<br>
+                    <strong>Status:</strong> ${offer.is_open ? 'Open' : 'Closed'}<br>
+                    ${offer.address ? `<strong>Address:</strong> ${offer.address}<br>` : ''}
+                    <a href="/offer/${offer.id}/" target="_blank">View Offer</a>
+                `;
+                
+                // Use different icons based on context
+                let preset = 'islands#blueShoppingIcon';
+                if (offer.is_my_offer) {
+                    preset = 'islands#greenDotIcon';
+                } else if (!offer.is_open) {
+                    preset = 'islands#grayDotIcon';
+                }
+                
+                const offerPlacemark = new ymaps.Placemark(
+                    [offer.latitude, offer.longitude],
+                    {
+                        balloonContent: offerContent,
+                        iconCaption: offer.title
+                    },
+                    {
+                        preset: preset,
+                        balloonCloseButton: true,
+                        hideIconOnBalloonOpen: false
+                    }
+                );
+                
+                myMap.geoObjects.add(offerPlacemark);
+                allOfferPlacemarks.push(offerPlacemark);
+                console.log('Added marker for offer:', offer.id, offer.title);
+            });
+            
+            // Update offers count display (only if not in view mode)
+            if (!isViewMode) {
+                updateOffersCount(filteredOffers.length);
+            }
+            
+            console.log('Total markers added:', allOfferPlacemarks.length);
+        }
+        
+        function setupOfferFilter() {
+            const filterSelect = document.getElementById('offer-filter');
+            if (filterSelect) {
+                filterSelect.addEventListener('change', function() {
+                    currentOfferFilter = this.value;
+                    console.log('Filter changed to:', currentOfferFilter);
+                    showAllOffers(false);
+                });
+            }
+            
+            const viewAllBtn = document.getElementById('view-all-btn');
+            if (viewAllBtn) {
+                viewAllBtn.addEventListener('click', function() {
+                    console.log('View all offers button clicked');
+                    // Fit map to show all offers
+                    if (allOfferPlacemarks.length > 0) {
+                        const bounds = myMap.geoObjects.getBounds();
+                        if (bounds) {
+                            myMap.setBounds(bounds, { checkZoomRange: true, zoomMargin: 50 });
+                        }
+                    }
+                });
+            }
+        }
+        
+        function updateOffersCount(count) {
+            let countElement = document.getElementById('offers-count');
+            if (!countElement) {
+                countElement = document.createElement('div');
+                countElement.id = 'offers-count';
+                countElement.style.marginTop = '10px';
+                countElement.style.fontWeight = 'bold';
+                countElement.style.color = '#28a745';
+                const offersInfo = document.querySelector('.offers-info');
+                if (offersInfo) {
+                    offersInfo.appendChild(countElement);
+                }
+            }
+            countElement.textContent = `📌 Showing ${count} offer(s) on the map`;
         }
         
         function setupMapInteractions() {
