@@ -46,7 +46,7 @@ from django_ratelimit.decorators import ratelimit
 def is_admin(user):
     return user.is_staff
 
-@ratelimit(key='ip', rate='10/m')
+#@ratelimit(key='ip', rate='10/m')
 def thread_list(request):
     # Get all threads
     threads = Thread.objects.all()
@@ -78,7 +78,7 @@ def thread_list(request):
     })
 
 @login_required
-@ratelimit(key='ip', rate='3/m')
+#@ratelimit(key='ip', rate='3/m')
 def message_create(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
 
@@ -114,7 +114,7 @@ def message_create(request, thread_id):
         return JsonResponse({'success': False, 'error': 'Invalid request method.'})
 
 @require_POST
-@ratelimit(key='ip', rate='3/m')
+#@ratelimit(key='ip', rate='3/m')
 def message_edit(request, message_id):
     message = get_object_or_404(Message, id=message_id)
 
@@ -140,7 +140,7 @@ def message_edit(request, message_id):
     else:
         return JsonResponse({'success': False, 'error': 'Invalid form submission.'})
     
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
     message_list = thread.messages.all()
@@ -190,7 +190,7 @@ def thread_detail(request, thread_id):
     })
 
 @login_required
-@ratelimit(key='ip', rate='2/m')
+#@ratelimit(key='ip', rate='2/m')
 def thread_create(request):
     if request.method == 'POST':
         form = ThreadForm(request.POST)
@@ -215,7 +215,7 @@ def thread_create(request):
 
 @staff_member_required
 @login_required
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def thread_delete(request, thread_id):
     thread = get_object_or_404(Thread, id=thread_id)
     if request.method == 'POST':
@@ -224,7 +224,7 @@ def thread_delete(request, thread_id):
     return redirect('thread_detail', thread_id=thread.id)
 
 @login_required
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def message_delete(request, message_id):
     # Fetch the message or return a 404 error if it doesn't exist
     message = get_object_or_404(Message, id=message_id)
@@ -239,18 +239,18 @@ def message_delete(request, message_id):
     # Redirect back to the thread detail page
     return redirect('thread_detail', thread_id=message.thread.id)
 
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def home(request):
     return render(request, 'home.html', {'is_home': True})
 
 def map(request):
     return render(request, 'map.html')
 
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def about(request):
 	return render(request, "about.html")
 
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def offermain(request):
     show_closed = request.GET.get('show_closed', 'false').lower() == 'true'  # Convert to boolean
     if show_closed:
@@ -277,7 +277,7 @@ def map(request):
         'offers': offers,
     })
 
-@ratelimit(key='ip', rate='10/m')
+#@ratelimit(key='ip', rate='10/m')
 def itemIndex(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
     is_admin = request.user.is_staff
@@ -299,7 +299,7 @@ def itemIndex(request, req_id):
     })
 
 @login_required
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def create(request):
     if request.method == 'POST':
         form = OfferForm(request.POST, request.FILES)
@@ -341,7 +341,7 @@ def create(request):
 def map(request):
     return render(request, 'map.html')
 
-@ratelimit(key='ip', rate='10/m')
+#@ratelimit(key='ip', rate='10/m')
 def login_view(request):
     storage = messages.get_messages(request)
     for message in storage:
@@ -386,7 +386,7 @@ def logout_view(request):
     return redirect('home')
 
 @login_required
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def edit_offer(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
     
@@ -427,7 +427,7 @@ def edit_offer(request, req_id):
     return render(request, 'edit_offer.html', {'form': form, 'offer': offer})
 
 @login_required
-@ratelimit(key='ip', rate='10/m')
+#@ratelimit(key='ip', rate='10/m')
 def delete_offer(request, req_id):
     offer = get_object_or_404(Offer, id=req_id)
     
@@ -441,7 +441,7 @@ def delete_offer(request, req_id):
     return redirect('offermain')
 
 @login_required
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def profile(request):
     if request.method == 'POST':
         # Use the custom password change form
@@ -461,7 +461,7 @@ def profile(request):
     })
 
 @login_required
-@ratelimit(key='ip', rate='10/m')
+#@ratelimit(key='ip', rate='10/m')
 def my_offers(request):
     open_offers = Offer.objects.filter(user=request.user, is_open=True)
     closed_offers = Offer.objects.filter(user=request.user, is_open=False)
@@ -564,7 +564,7 @@ def delete_user(request, user_id):
     return render(request, 'confirm_delete_user.html', {'user': user})
 
 @login_required
-@ratelimit(key='ip', rate='10/m')
+#@ratelimit(key='ip', rate='10/m')
 def report_message(request, message_id):
     message = get_object_or_404(Message, id=message_id)
     if request.method == 'POST':
@@ -637,7 +637,7 @@ def resend_verification(response):
         'error': 'Invalid request'
     })
 
-@ratelimit(key='ip', rate='5/m')
+#@ratelimit(key='ip', rate='5/m')
 def register(response):
     if response.user.is_authenticated:
         return redirect('home')
@@ -727,7 +727,7 @@ def send_verification_email(email, code):
     )
     email.send()
 
-@ratelimit(key='ip', rate='2/m')
+#@ratelimit(key='ip', rate='2/m')
 def request_password_reset(request):
     if request.method != 'POST':
         return JsonResponse({
@@ -840,7 +840,7 @@ def verify_password_reset(request):
         'error': 'Invalid request method.'
     })
 
-@ratelimit(key='ip', rate='3/h')
+#@ratelimit(key='ip', rate='3/h')
 def resend_reset_code(request):
     if request.method != 'POST':
         return JsonResponse({
