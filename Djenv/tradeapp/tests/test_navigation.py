@@ -15,13 +15,9 @@ class TestNavigation:
     def test_navigate_to_create_offer(self, logged_in_home_page):
         """Тест перехода к созданию оффера через sidebar"""
         logged_in_home_page.navigate_to_create_offer()
-        
-        # Проверяем что перешли на страницу создания
         assert "create" in logged_in_home_page.get_current_url().lower()
     
     def test_navigate_to_forum(self, logged_in_home_page):
         """Тест перехода к форуму через sidebar"""
         logged_in_home_page.navigate_to_forum()
-        
-        # Проверяем что перешли на форум
         assert "forum" in logged_in_home_page.get_current_url().lower()
